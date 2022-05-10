@@ -276,8 +276,8 @@ export class EditorPanelComponent implements OnInit {
 
         registro[genEnum.OBSERVACION] = '';
         registro[genEnum.CONCEPTO] = registro[mifelEnum.DESC].trim();
-        registro[genEnum.ABONO] ? registro[genEnum.ABONO] : 0.00;
-        registro[genEnum.CARGO] ? registro[genEnum.CARGO] : 0.00;
+        registro[genEnum.ABONO] = registro.hasOwnProperty(genEnum.ABONO) ? registro[genEnum.ABONO] : 0.00;
+        registro[genEnum.CARGO] = registro.hasOwnProperty(genEnum.CARGO) ? registro[genEnum.CARGO] : 0.00;
         registro[genEnum.SALDO] = registro[mifelEnum.SALDO];
         registro[genEnum.TIPO] = this.defineType(registro[genEnum.CONCEPTO], registro[genEnum.ABONO], registro[genEnum.CARGO]);
         
@@ -532,8 +532,6 @@ export class EditorPanelComponent implements OnInit {
         registro[genEnum.MES] = parseInt(registro[afirmeEnum.FECHA].substring(3,5));
         registro[genEnum.ANIO] = this.appService.formData.date.getFullYear();
 
-        registro[genEnum.HORA_MOVIMIENTO] = ''; /** SACAR DEL CONCEPTO LA HORA */
-        
         if(numDay != registro[genEnum.DIA]) {
           numDay = registro[genEnum.DIA];
           counterByDay = 1;
@@ -544,6 +542,11 @@ export class EditorPanelComponent implements OnInit {
 
         registro[genEnum.OBSERVACION] = '';
         registro[genEnum.CONCEPTO] = registro[afirmeEnum.DESC].trim();
+
+        console.log(registro[genEnum.CONCEPTO].search('HORA:'));
+        let idx = registro[genEnum.CONCEPTO].search('HORA:');
+        registro[genEnum.HORA_MOVIMIENTO] = idx != -1 ? registro[genEnum.CONCEPTO].slice(idx + 5, idx + 13).trim() : '';
+        
         registro[genEnum.ABONO] ? registro[afirmeEnum.ABONO] : 0.00;
         registro[genEnum.CARGO] ? registro[afirmeEnum.CARGO] : 0.00;
         registro[genEnum.SALDO] = registro[afirmeEnum.SALDO];
@@ -583,6 +586,7 @@ export class EditorPanelComponent implements OnInit {
       tipo = 'cancelado';
     } else if((texto.toLowerCase().includes('pago cheque') || 
         texto.toLowerCase().includes('pago de cheque') || 
+        texto.toLowerCase().includes('pag cheq') || 
         texto.toLowerCase().includes('efectivo')) && 
         (entrada === 0 && salida > 0)) {
       tipo = 'efectivo';

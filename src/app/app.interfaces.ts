@@ -156,6 +156,7 @@ export let BUSINESS = [
     name: 'DFL',
     accounts : [
       {bank: 'BBVA', account: '0117062842'},
+      {bank: 'BBVA DLS', account: '0117063318'},
     ]
   },
   {

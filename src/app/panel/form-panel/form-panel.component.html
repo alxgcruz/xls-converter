@@ -1,7 +1,8 @@
 <div class="p-fluid formgrid grid">
   <div class="field col-3">
     <span class="p-float-label">
-      <p-dropdown [options]="businesses" [(ngModel)]="appService.formData.business" (onChange)="changeBusiness($event)" optionLabel="name" inputId="businessPicker"></p-dropdown>
+      <p-dropdown [filter]="true" filterBy="name" [showClear]="true" placeholder="Seleccione una Empresa"
+                  [options]="businesses" [(ngModel)]="appService.formData.business" (onChange)="changeBusiness($event)" optionLabel="name" inputId="businessPicker"></p-dropdown>
       <label for="businessPicker">Empresa</label>
     </span>
   </div>
