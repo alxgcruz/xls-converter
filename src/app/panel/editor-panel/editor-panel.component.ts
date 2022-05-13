@@ -4,7 +4,9 @@ import * as FileSaver from 'file-saver';
 import { AppService } from 'src/app/services/app.service';
 const EXCEL_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
 const EXCEL_EXTENSION = '.xlsx';
-import * as dayjs from 'dayjs'
+import * as dayjs from 'dayjs';
+import { genEnum, multivaEnum, mifelEnum, stpEnum, bajioEnum, bbvaEnum, afirmeEnum, santanderEnum } from 'src/app/app.enums';
+import { generic } from '../../app.interfaces';
 
 @Component({
   selector: 'app-editor-panel',
@@ -13,13 +15,18 @@ import * as dayjs from 'dayjs'
 })
 export class EditorPanelComponent implements OnInit {
 
-  data: any;
+  data: any[];
+  dataBase: any[];
   header: any;
   messages: any[] = [];
   showMessage = false;
 
+  dateReport: any;
+  timeReport: any;
+
   constructor(public appService: AppService) {
     this.data = [];
+    this.dataBase = [];
     this.header = [
       genEnum.ABONO,
       genEnum.CARGO,
@@ -39,26 +46,30 @@ export class EditorPanelComponent implements OnInit {
 
   ngOnInit(): void {
 
-    this.appService.onClickEvent.subscribe(() => {
-      /** CREAR NOMBRE DE ARCHIVO */
-      let fechaActual = new Date().toLocaleString('es-MX', {day: '2-digit',month: 'long'});
-      let name = this.appService.formData.business.name;
-      name += " " + this.appService.formData.bank.bank;
-      name += " " + this.appService.formData.bank.account;
-      name += " " + fechaActual;
-      
-      console.log('DESCARGAR XLS ', name);
-
-      if(this.data.length) {
-        this.exportAsExcelFile(this.data, name);
+    this.appService.onClickEvent.subscribe((ev) => {
+      switch (ev) {
+        case 'download':
+          this.printXls();
+          break;
+        case 'compare':
+          this.compareFiles();
+          break;
+        default:
+          break;
       }
     });
       
     this.appService.dataSource$.subscribe((data: any) => {
       // console.log(this.appService.formData);
+      this.dateReport = this.appService.formData.date.toLocaleDateString('short',{day: '2-digit',month: '2-digit',year: 'numeric'});
+      this.timeReport = this.appService.formData.time.toTimeString().substring(0,8);
+
       this.messages = [];
       switch (this.appService.formData.bank.bank) {
         case 'SANTANDER':
+            this.santanderFormat(data);
+          break;
+        case 'SANTANDER DLS':
             this.santanderFormat(data);
           break;
         case 'MULTIVA':
@@ -76,15 +87,19 @@ export class EditorPanelComponent implements OnInit {
         case 'BBVA':
             this.bbvaFormat(data);
           break;
+        case 'BBVA DLS':
+            this.bbvaFormat(data);
+          break;
         case 'AFIRME':
             this.afirmeFormat(data);
           break;
         default:
           break;
       }
-      
-      // this.data = data;
-      // console.log('editor-component',{header: this.header, data} );
+    })
+
+    this.appService.dataBase$.subscribe( (data: any) => {
+      this.dataBase = data;
     })
 
     this.appService.onErrorEvent.subscribe(() => {
@@ -104,70 +119,45 @@ export class EditorPanelComponent implements OnInit {
       let counterByDay = 0;
 
       this.data = data.map((registro) => {
-        
-        registro[genEnum.FECHA_REPORTE] = this.appService.formData.date.toLocaleDateString('short',{day: '2-digit',month: '2-digit',year: 'numeric'});
-        registro[genEnum.HORA_REPORTE] = this.appService.formData.time.toTimeString().substring(0,8);
-        // registro[genEnum.HORA_REPORTE] = this.formatAMPM(this.appService.formData.time);
-        
-        registro[genEnum.DIA] = parseInt(registro['Fecha'].substring(1,3));
-        registro[genEnum.MES] = parseInt(registro['Fecha'].substring(3,5));
-        registro[genEnum.ANIO] = parseInt(registro['Fecha'].substring(5,9));
-        registro[genEnum.HORA_MOVIMIENTO] = registro['Hora'];
+        let reg:generic = this.initReg();
 
-        if(numDay != registro[genEnum.DIA]) {
-          numDay = registro[genEnum.DIA];
+        reg.fecha_reporte = this.dateReport;
+        reg.hora_reporte = this.timeReport;
+        
+        reg.dia = parseInt(registro[santanderEnum.FECHA].substring(1,3));
+        reg.mes = parseInt(registro[santanderEnum.FECHA].substring(3,5));
+        reg.anio = parseInt(registro[santanderEnum.FECHA].substring(5,9));
+        reg.hora_movimiento = registro[santanderEnum.HORA];
+
+        if(numDay != reg.dia) {
+          numDay = reg.dia;
           counterByDay = 1;
         } else {
           counterByDay += 1;
         }
-        registro[genEnum.ID_INTERNO] = counterByDay;
+        reg.id_interno = counterByDay;
 
-        if(registro['Cargo/Abono'] === '+') {
-          registro[genEnum.ABONO] = parseFloat(registro['Importe']);
-          registro[genEnum.CARGO] = 0.00;
+        if(registro[santanderEnum.MOV] === '+') {
+          reg.entrada = parseFloat(registro[santanderEnum.IMPORTE]);
+          reg.salida = 0.00;
         } else {
-          registro[genEnum.ABONO] = 0.00;
-          registro[genEnum.CARGO] = parseFloat(registro['Importe']);
+          reg.entrada = 0.00;
+          reg.salida = parseFloat(registro[santanderEnum.IMPORTE]);
         }
-        registro[genEnum.SALDO] = registro['Saldo'];
-        registro['Descripción'] = registro['Descripción'].toString().trim();
-        registro['Referencia'] = registro['Referencia'].toString().trim();
-        registro[genEnum.CONCEPTO] = registro[genEnum.CONCEPTO].toString().trim();
+        reg.saldo = registro[santanderEnum.SALDO];
+        registro[santanderEnum.DESC] = registro[santanderEnum.DESC].toString().trim();
+        registro[santanderEnum.REF] = registro.hasOwnProperty(santanderEnum.REF) ? registro[santanderEnum.REF].toString().trim() : '';
+        reg.concepto = registro.hasOwnProperty(santanderEnum.CONCEPTO) ? registro[santanderEnum.CONCEPTO].toString().trim() : '';
         
-        if(!registro[genEnum.CONCEPTO].length) {
-          registro[genEnum.OBSERVACION] = registro['Descripción'] + " " + registro['Referencia'];
-          registro[genEnum.TIPO] = this.defineType(registro[genEnum.OBSERVACION], registro[genEnum.ABONO], registro[genEnum.CARGO]);
+        if(!reg.concepto.length) {
+          reg.observacion = registro[santanderEnum.DESC] + " " + registro[santanderEnum.REF];
+          reg.tipo = this.defineType(reg.observacion, reg.entrada, reg.salida);
         } else {
-          registro[genEnum.OBSERVACION] = '';
-          registro[genEnum.TIPO] = this.defineType(registro[genEnum.CONCEPTO], registro[genEnum.ABONO], registro[genEnum.CARGO]);
+          reg.observacion = '';
+          reg.tipo = this.defineType(reg.concepto, reg.entrada, reg.salida);
         }
-  
-        delete registro['Cuenta'];
-        delete registro['Sucursal'];
-        delete registro['Clave de Rastreo'];
-        delete registro['Causa Devolución'];
-        delete registro['Clabe Beneficiario'];
-        delete registro['Código Devolución'];
-        delete registro['Causa Devolución'];
-        delete registro['Cta Ordenante'];
-        delete registro['Nombre Beneficiario'];
-        delete registro['Nombre Ordenante'];
-        delete registro['Banco Participante'];
-        delete registro['RFC Ordenante'];
-        delete registro['RFC Beneficiario'];
-        delete registro['Fecha'];
-        delete registro['Hora'];
-        delete registro['Importe'];
-        delete registro['Cargo/Abono'];
-        delete registro['Descripción'];
-        delete registro['Referencia'];
-  
-        let sortedObject: any = {};
-        this.header.forEach((head: string) => {
-          sortedObject[head] = registro[head];
-        });
-  
-        return sortedObject;
+
+        return reg;
       });
     } catch(err) {
       console.error(err);
@@ -177,52 +167,40 @@ export class EditorPanelComponent implements OnInit {
 
   multivaFormat(data: any[]) {
     try {
-
       let numDay: string | number = 0;
       let counterByDay = 0;
 
       this.data = data.map((registro) => {
-        registro[genEnum.FECHA_REPORTE] = this.appService.formData.date.toLocaleDateString('short',{day: '2-digit',month: '2-digit',year: 'numeric'});
-        registro[genEnum.HORA_REPORTE] = this.appService.formData.time.toTimeString().substring(0,8);
-        // registro[genEnum.HORA_REPORTE] = this.formatAMPM(this.appService.formData.time);
+        let reg:generic = this.initReg();
+
+        reg.fecha_reporte = this.dateReport;
+        reg.hora_reporte = this.timeReport;
         
-        registro[genEnum.DIA] = dayjs(registro[multivaEnum.FECHA]).get('day');
-        registro[genEnum.MES] = this.appService.formData.date.getMonth() + 1;
-        registro[genEnum.ANIO] = this.appService.formData.date.getFullYear();
-        registro[genEnum.HORA_MOVIMIENTO] = registro['Fecha de Aplicacion'];
+        reg.dia = parseInt(registro[multivaEnum.FECHA].substring(0,2));
+        reg.mes = parseInt(registro[multivaEnum.FECHA].substring(3,5));
+        reg.anio = this.appService.formData.date.getFullYear();
+        reg.hora_movimiento = registro[multivaEnum.HORA];
         
-        registro[genEnum.OBSERVACION] = '';
-        registro[genEnum.CONCEPTO] = registro[multivaEnum.DESC].toString().trim();
-        registro[genEnum.ABONO] = registro[genEnum.ABONO] ? registro[genEnum.ABONO] : 0.00;
-        registro[genEnum.CARGO] = registro[genEnum.CARGO] ? registro[genEnum.CARGO] * -1 : 0.00;
-        registro[genEnum.SALDO] = registro['Saldo'];
-        registro[genEnum.TIPO] = this.defineType(registro[genEnum.CONCEPTO], registro[genEnum.ABONO], registro[genEnum.CARGO]);
+        reg.observacion = '';
+        reg.concepto = registro[multivaEnum.DESC].toString().trim();
+        reg.entrada = registro[multivaEnum.ABONO] ? this.formatNumber(registro[multivaEnum.ABONO]) : 0.00;
+        reg.salida = registro[multivaEnum.CARGO] ? this.formatNumber(registro[multivaEnum.CARGO]) : 0.00;
+        reg.saldo = this.formatNumber(registro[multivaEnum.SALDO]);
+        reg.tipo = this.defineType(reg.concepto, reg.entrada, reg.salida);
         
-        delete registro['Folio'];
-        delete registro['Referencia'];
-        delete registro['Fecha de Aplicacion'];
-        delete registro[multivaEnum.FECHA];
-        delete registro[multivaEnum.DESC];
-        
-        let sortedObject: any = {};
-        this.header.forEach((head: string) => {
-          sortedObject[head] = registro[head];
-        });
-  
-        return sortedObject;
-  
+        return reg;
       });
 
       this.data = this.data.reverse();
 
-      this.data = this.data.map( (registro: any) => {
-        if(numDay != registro[genEnum.DIA]) {
-          numDay = registro[genEnum.DIA];
+      this.data = this.data.map( (registro: generic) => {
+        if(numDay != registro.dia) {
+          numDay = registro.dia;
           counterByDay = 1;
         } else {
           counterByDay += 1;
         }
-        registro[genEnum.ID_INTERNO] = counterByDay;
+        registro.id_interno = counterByDay;
         return registro;
       });
 
@@ -234,14 +212,13 @@ export class EditorPanelComponent implements OnInit {
 
   mifelFormat(data: any[]) {
     try {
-      
       let newData = [];
       let regReal: any = {};
 
       /** RECORRER LA TABLA PARA AGREGAR SOLO LOS QUE  */
       for (let index = 0; index < data.length; index++) {
         const registro = data[index];
-        if ( isNaN(registro[genEnum.ABONO]) && isNaN(registro[genEnum.CARGO]) ) {
+        if ( !registro.hasOwnProperty(mifelEnum.NO) ) {
           let idx = newData.findIndex((value) => value[mifelEnum.NO] === regReal[mifelEnum.NO]);
           if (idx >= 0) {
             newData[idx][mifelEnum.DESC] += ' ' + registro[mifelEnum.DESC];
@@ -256,46 +233,32 @@ export class EditorPanelComponent implements OnInit {
       let counterByDay = 0;
 
       this.data = newData.map( (registro) => {
+        let reg:generic = this.initReg();
 
-        registro[genEnum.FECHA_REPORTE] = this.appService.formData.date.toLocaleDateString('short',{day: '2-digit',month: '2-digit',year: 'numeric'});
-        registro[genEnum.HORA_REPORTE] = this.appService.formData.time.toTimeString().substring(0,8);
-        // registro[genEnum.HORA_REPORTE] = this.formatAMPM(this.appService.formData.time);
+        reg.fecha_reporte = this.dateReport;
+        reg.hora_reporte = this.timeReport;
         
-        registro[genEnum.DIA] = dayjs(registro[mifelEnum.FECHA]).get('day');
-        registro[genEnum.MES] = this.appService.formData.date.getMonth() + 1;
-        registro[genEnum.ANIO] = this.appService.formData.date.getFullYear();
-        registro[genEnum.HORA_MOVIMIENTO] = '';
+        reg.dia = parseInt(registro[mifelEnum.FECHA].substring(0,2));
+        reg.mes = parseInt(registro[mifelEnum.FECHA].substring(3,5));
+        reg.anio = this.appService.formData.date.getFullYear();
+        reg.hora_movimiento = '';
         
-        if(numDay != registro[genEnum.DIA]) {
-          numDay = registro[genEnum.DIA];
+        if(numDay != reg.dia) {
+          numDay = reg.dia;
           counterByDay = 1;
         } else {
           counterByDay += 1;
         }
-        registro[genEnum.ID_INTERNO] = counterByDay;
+        reg.id_interno = counterByDay;
 
-        registro[genEnum.OBSERVACION] = '';
-        registro[genEnum.CONCEPTO] = registro[mifelEnum.DESC].trim();
-        registro[genEnum.ABONO] = registro.hasOwnProperty(genEnum.ABONO) ? registro[genEnum.ABONO] : 0.00;
-        registro[genEnum.CARGO] = registro.hasOwnProperty(genEnum.CARGO) ? registro[genEnum.CARGO] : 0.00;
-        registro[genEnum.SALDO] = registro[mifelEnum.SALDO];
-        registro[genEnum.TIPO] = this.defineType(registro[genEnum.CONCEPTO], registro[genEnum.ABONO], registro[genEnum.CARGO]);
-        
+        reg.observacion = '';
+        reg.concepto = registro[mifelEnum.DESC].trim();
+        reg.entrada= registro.hasOwnProperty(mifelEnum.ABONO) ? this.formatNumber(registro[mifelEnum.ABONO]) : 0.00;
+        reg.salida = registro.hasOwnProperty(mifelEnum.CARGO) ? this.formatNumber(registro[mifelEnum.CARGO]) : 0.00;
+        reg.saldo = registro[mifelEnum.SALDO];
+        reg.tipo = this.defineType(reg.concepto, reg.entrada, reg.salida);
 
-        delete registro[mifelEnum.DESC];
-        delete registro[mifelEnum.NO];
-        delete registro[mifelEnum.FECHA];
-        delete registro['Moneda'];
-        delete registro['Folio de Operaciï¿½n'];
-        delete registro['No. de Cheque'];
-        delete registro['Referencia'];
-
-        let sortedObject: any = {};
-        this.header.forEach((head: string) => {
-          sortedObject[head] = registro[head];
-        });
-
-        return sortedObject;
+        return reg;
       });
 
     } catch (error) {
@@ -320,8 +283,8 @@ export class EditorPanelComponent implements OnInit {
           diaReg = registro['Hora'].substring(0,2);
           mesReg = registro['Hora'].substring(3,5);
         } else {
-          registro[genEnum.DIA] = parseInt(diaReg);
-          registro[genEnum.MES] = parseInt(mesReg);
+          registro[stpEnum.DIA] = parseInt(diaReg);
+          registro[stpEnum.MES] = parseInt(mesReg);
         }
 
         if ( registro.hasOwnProperty(stpEnum.ABONO) && registro.hasOwnProperty('Hora')) {
@@ -334,8 +297,8 @@ export class EditorPanelComponent implements OnInit {
             newData[idx][stpEnum.MOV] += ' ' + registro[stpEnum.MOV];
             if(registro.hasOwnProperty(stpEnum.ABONO)) {
               let quaPart = isNaN(registro[stpEnum.ABONO]) ? this.formatNumber(registro[stpEnum.ABONO]) : registro[stpEnum.ABONO];
-              if(newData[idx][genEnum.ABONO] === '- ') {
-                newData[idx][genEnum.ABONO] = 0.00;
+              if(newData[idx][stpEnum.ABONO] === '- ') {
+                newData[idx][stpEnum.ABONO] = 0.00;
               }
               newData[idx][stpEnum.ABONO] += quaPart;
             }
@@ -348,47 +311,41 @@ export class EditorPanelComponent implements OnInit {
       let counterByDay = 0;
 
       this.data = newData.map( registro => {
+        let reg:generic = this.initReg();
+
+        reg.fecha_reporte = this.dateReport;
+        reg.hora_reporte = this.timeReport;
         
-        if(numDay != registro[genEnum.DIA]) {
-          numDay = registro[genEnum.DIA];
+        reg.dia = registro[stpEnum.DIA];
+        reg.mes = registro[stpEnum.MES];
+        reg.anio = this.appService.formData.date.getFullYear();
+        reg.hora_movimiento = registro[stpEnum.HORA];
+        
+        if(numDay != reg.dia) {
+          numDay = reg.dia;
           counterByDay = 1;
         } else {
           counterByDay += 1;
         }
-        registro[genEnum.ID_INTERNO] = counterByDay;
 
-        registro[genEnum.FECHA_REPORTE] = this.appService.formData.date.toLocaleDateString('short',{day: '2-digit',month: '2-digit',year: 'numeric'});
-        registro[genEnum.HORA_REPORTE] = this.appService.formData.time.toTimeString().substring(0,8);
-        // registro[genEnum.HORA_REPORTE] = this.formatAMPM(this.appService.formData.time);
-        registro[genEnum.ANIO] = this.appService.formData.date.getFullYear();
-        registro[genEnum.HORA_MOVIMIENTO] = registro[stpEnum.HORA];
-        
-        registro[genEnum.OBSERVACION] = '';
-        registro[genEnum.CONCEPTO] = registro[stpEnum.MOV].trim();
+        reg.id_interno = counterByDay;
+        reg.observacion = '';
+        reg.concepto = registro[stpEnum.MOV].trim();
 
-        if(registro[genEnum.ABONO] === '- ') {
-          registro[genEnum.ABONO] = 0.00;
+        if(registro[stpEnum.ABONO] === '- ') {
+          reg.entrada = 0.00;
         } else {
-          registro[genEnum.ABONO] = isNaN(registro[genEnum.ABONO]) ? this.formatNumber(registro[genEnum.ABONO]) : registro[genEnum.ABONO];
+          reg.entrada = isNaN(registro[stpEnum.ABONO]) ? this.formatNumber(registro[stpEnum.ABONO]) : registro[stpEnum.ABONO];
         }
-        if(registro[genEnum.CARGO] === '- ') {
-          registro[genEnum.CARGO] = 0.00;
+        if(registro[stpEnum.CARGO] === '- ') {
+          reg.salida = 0.00;
         } else {
-          registro[genEnum.CARGO] = isNaN(registro[genEnum.CARGO]) ? this.formatNumber(registro[genEnum.CARGO]) : registro[genEnum.CARGO];
+          reg.salida = isNaN(registro[stpEnum.CARGO]) ? this.formatNumber(registro[stpEnum.CARGO]) : registro[stpEnum.CARGO];
         }
-        registro[genEnum.SALDO] = isNaN(registro[genEnum.SALDO]) ? this.formatNumber(registro[genEnum.SALDO]) : registro[genEnum.SALDO];
-        registro[genEnum.TIPO] = this.defineType(registro[genEnum.CONCEPTO], registro[genEnum.ABONO], registro[genEnum.CARGO]);
-        
-        
-        delete registro[stpEnum.HORA];
-        delete registro[stpEnum.MOV];
+        reg.saldo = isNaN(registro[stpEnum.SALDO]) ? this.formatNumber(registro[stpEnum.SALDO]) : registro[stpEnum.SALDO];
+        reg.tipo = this.defineType(reg.concepto, reg.entrada, reg.salida);
 
-        let sortedObject: any = {};
-        this.header.forEach((head: string) => {
-          sortedObject[head] = registro[head];
-        });
-
-        return sortedObject;
+        return reg;
       });
 
     } catch (error) {
@@ -403,58 +360,42 @@ export class EditorPanelComponent implements OnInit {
       let counterByDay = 0;
 
       this.data = data.map( registro => {
-        // console.log(Object.assign({},registro));
-        registro[genEnum.FECHA_REPORTE] = this.appService.formData.date.toLocaleDateString('short',{day: '2-digit',month: '2-digit',year: 'numeric'});
-        registro[genEnum.HORA_REPORTE] = this.appService.formData.time.toTimeString().substring(0,8);
-        // registro[genEnum.HORA_REPORTE] = this.formatAMPM(this.appService.formData.time);
-        registro[genEnum.ANIO] = this.appService.formData.date.getFullYear();
-        registro[genEnum.HORA_MOVIMIENTO] = registro[bajioEnum.HORA];
+        let reg:generic = this.initReg();
 
-        registro[genEnum.DIA] = dayjs(registro[bajioEnum.FECHA_MOVIMIENTO]).get('day') + 1;
-        registro[genEnum.MES] = dayjs(registro[bajioEnum.FECHA_MOVIMIENTO]).get('month') + 1;
-        registro[genEnum.ANIO] = this.appService.formData.date.getFullYear();
+        reg.fecha_reporte = this.dateReport;
+        reg.hora_reporte = this.timeReport;
         
-        registro[genEnum.OBSERVACION] = '';
-        registro[genEnum.CONCEPTO] = registro[bajioEnum.DESC].trim();
-
-        registro[genEnum.ABONO] = registro[bajioEnum.ABONOS];
-        registro[genEnum.CARGO] = registro[bajioEnum.CARGOS];
-        registro[genEnum.SALDO] = registro[bajioEnum.SALDO];
-        registro[genEnum.TIPO] = this.defineType(registro[genEnum.CONCEPTO], registro[genEnum.ABONO], registro[genEnum.CARGO]);
+        reg.dia = parseInt(registro[bajioEnum.FECHA_MOVIMIENTO].substring(0,2));
+        reg.mes = dayjs(registro[bajioEnum.FECHA_MOVIMIENTO]).get('month') + 1;
+        reg.anio = this.appService.formData.date.getFullYear();
+        reg.hora_movimiento = registro[bajioEnum.HORA];
         
-        
-        delete registro[bajioEnum.HORA];
-        delete registro[bajioEnum.DESC];
-        delete registro[bajioEnum.ABONOS];
-        delete registro[bajioEnum.CARGOS];
-        delete registro[bajioEnum.FECHA_MOVIMIENTO];
-        delete registro[bajioEnum.NUM];
-        delete registro[bajioEnum.RECIBO];
+        reg.observacion = '';
+        reg.concepto = registro[bajioEnum.DESC].trim();
+        reg.entrada = registro[bajioEnum.ABONOS];
+        reg.salida = registro[bajioEnum.CARGOS];
+        reg.saldo = registro[bajioEnum.SALDO];
+        reg.tipo = this.defineType(reg.concepto, reg.entrada, reg.salida);
 
-        let sortedObject: any = {};
-        this.header.forEach((head: string) => {
-          sortedObject[head] = registro[head];
-        });
-
-        return sortedObject;
+        return reg;
       });
 
       this.data = this.data.reverse();
 
-      this.data = this.data.map((registro: any) => {
-        if(numDay != registro[genEnum.DIA]) {
-          numDay = registro[genEnum.DIA];
+      this.data = this.data.map((registro: generic) => {
+        if(numDay != registro.dia) {
+          numDay = registro.dia;
           counterByDay = 1;
         } else {
           counterByDay += 1;
         }
-        registro[genEnum.ID_INTERNO] = counterByDay;
+        registro.id_interno = counterByDay;
         return registro;
       });
 
     } catch(err) {
       console.error(err);
-      this.catchError('ELIMINAR LA INFORMACIÓN SUPERIOR PARA DEJAR SOLO LA TABLA');
+      this.catchError('ELIMINAR LA INFORMACIÓN SUPERIOR E INFERIOR PARA DEJAR SOLO LA TABLA');
     }
   }
 
@@ -464,48 +405,38 @@ export class EditorPanelComponent implements OnInit {
       let counterByDay = 0;
 
       this.data = data.map( registro => {
-        // console.log(Object.assign({},registro));
+        let reg:generic = this.initReg();
 
-        registro[genEnum.FECHA_REPORTE] = this.appService.formData.date.toLocaleDateString('short',{day: '2-digit',month: '2-digit',year: 'numeric'});
-        registro[genEnum.HORA_REPORTE] = this.appService.formData.time.toTimeString().substring(0,8);
-        // registro[genEnum.HORA_REPORTE] = this.formatAMPM(this.appService.formData.time);
-        registro[genEnum.ANIO] = this.appService.formData.date.getFullYear();
-        registro[genEnum.HORA_MOVIMIENTO] = '';
-
-        registro[genEnum.DIA] = parseInt(registro[bbvaEnum.FECHA].substring(0,2));
-        registro[genEnum.MES] = parseInt(registro[bbvaEnum.FECHA].substring(3,5));
-        registro[genEnum.ANIO] = this.appService.formData.date.getFullYear();
+        reg.fecha_reporte = this.dateReport;
+        reg.hora_reporte = this.timeReport;
         
-        registro[genEnum.OBSERVACION] = '';
-        registro[genEnum.CONCEPTO] = registro[bbvaEnum.DESC].trim();
+        reg.hora_movimiento = '';
 
-        registro[genEnum.ABONO] = registro[bbvaEnum.ABONO] ? registro[bbvaEnum.ABONO] : 0.00;
-        registro[genEnum.CARGO] = registro[bbvaEnum.CARGO] ? registro[bbvaEnum.CARGO] : 0.00;
-        registro[genEnum.SALDO] = registro[bbvaEnum.SALDO];
-        registro[genEnum.TIPO] = this.defineType(registro[genEnum.CONCEPTO], registro[genEnum.ABONO], registro[genEnum.CARGO]);
+        reg.dia = parseInt(registro[bbvaEnum.FECHA].substring(0,2));
+        reg.mes = parseInt(registro[bbvaEnum.FECHA].substring(3,5));
+        reg.anio = this.appService.formData.date.getFullYear();
         
-        
-        delete registro[bbvaEnum.FECHA];
-        delete registro[bbvaEnum.DESC];
+        reg.observacion = '';
+        reg.concepto = registro[bbvaEnum.DESC].trim();
 
-        let sortedObject: any = {};
-        this.header.forEach((head: string) => {
-          sortedObject[head] = registro[head];
-        });
+        reg.entrada = registro[bbvaEnum.ABONO] ? registro[bbvaEnum.ABONO] : 0.00;
+        reg.salida = registro[bbvaEnum.CARGO] ? registro[bbvaEnum.CARGO] : 0.00;
+        reg.saldo = registro[bbvaEnum.SALDO];
+        reg.tipo = this.defineType(reg.concepto, reg.entrada, reg.salida);
 
-        return sortedObject;
+        return reg;
       });
 
       this.data = this.data.reverse();
 
-      this.data = this.data.map((registro: any) => {
-        if(numDay != registro[genEnum.DIA]) {
-          numDay = registro[genEnum.DIA];
+      this.data = this.data.map((registro: generic) => {
+        if(numDay != registro.dia) {
+          numDay = registro.dia;
           counterByDay = 1;
         } else {
           counterByDay += 1;
         }
-        registro[genEnum.ID_INTERNO] = counterByDay;
+        registro.id_interno = counterByDay;
         return registro;
       });
 
@@ -522,53 +453,86 @@ export class EditorPanelComponent implements OnInit {
       let counterByDay = 0;
 
       this.data = data.map( (registro) => {
-        console.log(Object.assign({}, registro));
+        let reg:generic = this.initReg();
 
-        registro[genEnum.FECHA_REPORTE] = this.appService.formData.date.toLocaleDateString('short',{day: '2-digit',month: '2-digit',year: 'numeric'});
-        registro[genEnum.HORA_REPORTE] = this.appService.formData.time.toTimeString().substring(0,8);
-        // registro[genEnum.HORA_REPORTE] = this.formatAMPM(this.appService.formData.time);
+        reg.fecha_reporte = this.dateReport;
+        reg.hora_reporte = this.timeReport;
         
-        registro[genEnum.DIA] = parseInt(registro[afirmeEnum.FECHA].substring(0,2));
-        registro[genEnum.MES] = parseInt(registro[afirmeEnum.FECHA].substring(3,5));
-        registro[genEnum.ANIO] = this.appService.formData.date.getFullYear();
+        reg.dia = parseInt(registro[afirmeEnum.FECHA].substring(0,2));
+        reg.mes = parseInt(registro[afirmeEnum.FECHA].substring(3,5));
+        reg.anio = this.appService.formData.date.getFullYear();
 
-        if(numDay != registro[genEnum.DIA]) {
-          numDay = registro[genEnum.DIA];
+        if(numDay != reg.dia) {
+          numDay = reg.dia;
           counterByDay = 1;
         } else {
           counterByDay += 1;
         }
-        registro[genEnum.ID_INTERNO] = counterByDay;
+        reg.id_interno = counterByDay;
 
-        registro[genEnum.OBSERVACION] = '';
-        registro[genEnum.CONCEPTO] = registro[afirmeEnum.DESC].trim();
+        reg.observacion = '';
+        reg.concepto = registro[afirmeEnum.DESC].trim();
 
-        console.log(registro[genEnum.CONCEPTO].search('HORA:'));
-        let idx = registro[genEnum.CONCEPTO].search('HORA:');
-        registro[genEnum.HORA_MOVIMIENTO] = idx != -1 ? registro[genEnum.CONCEPTO].slice(idx + 5, idx + 13).trim() : '';
+        let idx = reg.concepto.search('HORA:');
+        reg.hora_movimiento = idx != -1 ? reg.concepto.slice(idx + 5, idx + 13).trim() : '';
         
-        registro[genEnum.ABONO] ? registro[afirmeEnum.ABONO] : 0.00;
-        registro[genEnum.CARGO] ? registro[afirmeEnum.CARGO] : 0.00;
-        registro[genEnum.SALDO] = registro[afirmeEnum.SALDO];
-        registro[genEnum.TIPO] = this.defineType(registro[genEnum.CONCEPTO], registro[genEnum.ABONO], registro[genEnum.CARGO]);
-        
-
-        delete registro[afirmeEnum.REF];
-
-        let sortedObject: any = {};
-        this.header.forEach((head: string) => {
-          sortedObject[head] = registro[head];
-        });
-
-        return sortedObject;
+        reg.entrada = registro[afirmeEnum.ABONO] ? registro[afirmeEnum.ABONO] : 0.00;
+        reg.salida = registro[afirmeEnum.CARGO] ? registro[afirmeEnum.CARGO] : 0.00;
+        reg.saldo = registro[afirmeEnum.SALDO];
+        reg.tipo = this.defineType(reg.concepto, reg.entrada, reg.salida);
+      
+        return reg;
       });
 
     } catch (error) {
       console.error(error);
-      this.catchError('QUITAR INFORMACIÓN DE CABECERA Y ENTRE PÁGINAS DEL ARCHIVO');
+      this.catchError('QUITAR INFORMACIÓN DE CABECERA Y REVISE EL FORMATO DE LA FECHA');
     }
   }
 
+  compareFiles() {
+    let diffData: any[] = [];
+    this.dataBase.forEach((element: generic) => {
+      let idx = this.data.findIndex( (subel: generic) => {
+        if(subel.dia === element.dia && subel.mes === element.mes && subel.id_interno === element.id_interno) {
+          return subel;
+        } else {
+          return false;
+        }
+      });
+      if(idx < 0) {
+        diffData.push(element);
+      }
+    });
+
+    let fechaActual = new Date().toLocaleString('es-MX', {day: '2-digit',month: 'long'});
+    let name = 'DIFERENCIA ' + this.appService.formData.business.name;
+    name += ' ' + this.appService.formData.bank.bank;
+    name += ' ' + this.appService.formData.bank.account;
+    name += ' ' + fechaActual;
+    console.log('DESCARGAR XLS ', name);
+    if(diffData.length) {
+      this.exportAsExcelFile(diffData, name);
+    }
+  }
+
+  initReg(): generic {
+    return {
+      entrada: 0,
+      salida: 0,
+      fecha_reporte: '',
+      hora_reporte: '',
+      observacion: '',
+      concepto: '',
+      tipo: '',
+      dia: 0,
+      mes: 0,
+      anio: 0,
+      hora_movimiento: '',
+      saldo: 0,
+      id_interno: 0,
+    };
+  }
 
   catchError(msg: string = '') {
     if(msg.length) {
@@ -616,6 +580,19 @@ export class EditorPanelComponent implements OnInit {
     FileSaver.saveAs(data, fileName + EXCEL_EXTENSION);
   }
 
+  private printXls() {
+    /** CREAR NOMBRE DE ARCHIVO */
+    let fechaActual = new Date().toLocaleString('es-MX', {day: '2-digit',month: 'long'});
+    let name = this.appService.formData.business.name;
+    name += " " + this.appService.formData.bank.bank;
+    name += " " + this.appService.formData.bank.account;
+    name += " " + fechaActual;
+    console.log('DESCARGAR XLS ', name);
+    if(this.data.length) {
+      this.exportAsExcelFile(this.data, name);
+    }
+  }
+
   formatAMPM(date: Date) {
     let hours: number | string = date.getHours();
     let minutes: number | string = date.getMinutes();
@@ -628,72 +605,11 @@ export class EditorPanelComponent implements OnInit {
   }
 
   formatNumber(quantity: string): number {
+    quantity = quantity.replace('(','');
+    quantity = quantity.replace(')','');
     quantity = quantity.replace('$','');
     quantity = quantity.split(',').join('');
     return parseFloat(quantity);
   }
 
-}
-
-enum genEnum {
-  ABONO = 'Abono',
-  CARGO = 'Cargo',
-  FECHA_REPORTE = 'Fecha Reporte',
-  HORA_REPORTE = 'Hora Reporte',
-  OBSERVACION = 'Observacion',
-  CONCEPTO= 'Concepto',
-  TIPO = 'Tipo',
-  DIA = 'Dia',
-  MES = 'Mes',
-  ANIO = 'Anio',
-  HORA_MOVIMIENTO = 'Hora Movimiento',
-  SALDO = 'Saldo',
-  ID_INTERNO = 'ID Interno'
-}
-
-enum multivaEnum {
-  DESC = 'Descripción',
-  FECHA = 'Fecha',
-}
-
-enum mifelEnum {
-  NO = 'No.',
-  SALDO = 'Saldo',
-  DESC = 'Descripciï¿½n',
-  FECHA = 'Fecha',
-}
-
-enum stpEnum {
-  SALDO = 'Saldo',
-  MOV = 'Movimiento',
-  ABONO = 'Abono',
-  HORA = 'Hora',
-}
-
-enum bajioEnum {
-  NUM = '#',
-  FECHA_MOVIMIENTO = 'Fecha Movimiento',
-  HORA = 'Hora',
-  RECIBO = 'Recibo',
-  DESC = 'Descripción',
-  CARGOS = 'Cargos',
-  ABONOS = 'Abonos',
-  SALDO = 'Saldo'
-}
-
-enum bbvaEnum {
-  FECHA = 'Fecha',
-  DESC = 'Concepto / Referencia',
-  CARGO = 'Cargo',
-  ABONO = 'Abono',
-  SALDO = 'Saldo'
-}
-
-enum afirmeEnum {
-  FECHA = 'Fecha',
-  DESC = 'Concepto',
-  REF = 'Referencia',
-  CARGO = 'Cargo',
-  ABONO = 'Abono',
-  SALDO = 'Saldo'
 }

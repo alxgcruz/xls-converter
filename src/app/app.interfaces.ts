@@ -29,7 +29,8 @@ export class Business {
   }
 }
 
-export let BANKS = [
+
+export const BANKS = [
   {name: 'STP'},
   {name: 'BBVA'},
   {name: 'SANTANDER'},
@@ -46,7 +47,7 @@ export let BANKS = [
   {name: 'AFIRME DLS'},
 ]
 
-export let BUSINESS = [
+export const BUSINESS = [
   {
     name: 'RCA',
     accounts : [
@@ -250,3 +251,19 @@ export let BUSINESS = [
     ]
   }
 ]
+
+export interface generic {
+  entrada: number;
+  salida: number;
+  fecha_reporte: string;
+  hora_reporte: string;
+  observacion: string;
+  concepto: string;
+  tipo: string;
+  dia: number;
+  mes: number;
+  anio: number;
+  hora_movimiento: string;
+  saldo: number;
+  id_interno: number;
+}

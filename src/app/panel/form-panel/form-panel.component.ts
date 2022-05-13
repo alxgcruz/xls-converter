@@ -27,12 +27,18 @@ export class FormPanelComponent implements OnInit {
 
   onBasicUpload(event: any) {
     /* wire up file reader */
-    if (event.files.length !== 1) {
-      throw new Error('Cannot use multiple files');
+    // if (event.files.length !== 1) {
+    //   throw new Error('Cannot use multiple files');
+    // }
+    this.readFile(event.files[0],0);
+    if (event.files.length > 1) {
+      this.readFile(event.files[1],1);
     }
+  }
 
+  readFile(file: any,type: number) {
     const reader: FileReader = new FileReader();
-    reader.readAsBinaryString(event.files[0]);
+    reader.readAsBinaryString(file);
     reader.onload = (e: any) => {
       /* create workbook */
       const binarystr: string = e.target.result;
@@ -44,18 +50,22 @@ export class FormPanelComponent implements OnInit {
 
       /* save data */
       const data = XLSX.utils.sheet_to_json(ws); // to get 2d array pass 2nd parameter as object {header: 1}
-
-      this.appService.changeDataSource(data);
-      // console.log(data); // Data will be logged in array format containing objects
+      
+      if( type ) {
+        this.appService.changeDataBase(data);
+      } else {
+        this.appService.changeDataSource(data);
+      }
     };
   }
 
-  handleClick() {
-    this.appService.buttonClicked();
+  handleClick(ev: string) {
+    this.appService.buttonClicked(ev);
   }
 
   onClearUpload() {
     this.appService.fileLoaded = false;
+    this.appService.fileBaseLoaded = false;
     this.appService.clearFired()
   }
 

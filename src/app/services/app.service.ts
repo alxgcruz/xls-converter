@@ -9,6 +9,9 @@ export class AppService {
 
   private dataSource = new Subject();
   public dataSource$ = this.dataSource.asObservable();
+  
+  private dataBase = new Subject();
+  public dataBase$ = this.dataBase.asObservable();
 
   private clickEvent = new Subject();
   public onClickEvent = this.clickEvent.asObservable();
@@ -27,10 +30,7 @@ export class AppService {
   };
 
   public fileLoaded: boolean;
-
-  
-  // private formData = new Subject();
-  // public formData$ = this.formData.asObservable();
+  public fileBaseLoaded: boolean;
 
   constructor() {
     this.formData = {
@@ -40,6 +40,7 @@ export class AppService {
       bank: {bank: 'SANTANDER', account: ''},
     };
     this.fileLoaded = false;
+    this.fileBaseLoaded = false;
   }
 
   changeDataSource(data: any[]) {
@@ -47,8 +48,13 @@ export class AppService {
     this.dataSource.next(data);
   }
 
-  buttonClicked() {
-    this.clickEvent.next();
+  changeDataBase(data: any[]) {
+    this.fileBaseLoaded = true;
+    this.dataBase.next(data);
+  }
+
+  buttonClicked(ev: string) {
+    this.clickEvent.next(ev);
   }
 
   errorFired() {

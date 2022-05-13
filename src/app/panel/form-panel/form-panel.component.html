@@ -34,12 +34,16 @@
 </div>
 
 <div class="p-fluid formgrid grid">
-  <div class="field col-11">
-    <p-fileUpload chooseLabel=" " uploadLabel=" " cancelLabel=" " name="demo[]" accept=".xlsx,.csv,.xls" [customUpload]="true" [showCancelButton]="true"
-                  [maxFileSize]="1000000" (uploadHandler)="onBasicUpload($event)" (onError)="onErrorUpload()" (onRemove)="onClearUpload()" (onClear)="onClearUpload()"></p-fileUpload>
+  <div class="field col-10">
+    <p-fileUpload chooseLabel=" " uploadLabel=" " cancelLabel=" " name="demo[]" accept=".xlsx,.csv,.xls"
+                  [multiple]="true" [customUpload]="true" [showCancelButton]="true" [maxFileSize]="1000000" 
+                  (uploadHandler)="onBasicUpload($event)" (onError)="onErrorUpload()" (onRemove)="onClearUpload()" (onClear)="onClearUpload()"></p-fileUpload>
   </div>
 
   <div class="field col-1" *ngIf="appService.fileLoaded">
-    <p-button styleClass="p-button-success w-full" icon="pi pi-file-excel" iconPos="left" (onClick)="handleClick()"></p-button>
+    <p-button styleClass="p-button-success w-full" icon="pi pi-file-excel" iconPos="left" (onClick)="handleClick('download')"></p-button>
+  </div>
+  <div class="field col-1" *ngIf="appService.fileBaseLoaded">
+    <p-button styleClass="p-button-info w-full" icon="pi pi-clone" iconPos="left" (onClick)="handleClick('compare')"></p-button>
   </div>
 </div>
