@@ -403,8 +403,21 @@ export class EditorPanelComponent implements OnInit {
     try {
       let numDay: string | number = 0;
       let counterByDay = 0;
+      let newData = [];
+      let regReal: any = {};
 
-      this.data = data.map( registro => {
+      /** RECORRER LA TABLA PARA AGREGAR SOLO LOS QUE  */
+      for (let index = 0; index < data.length; index++) {
+        const registro = data[index];
+        if ( !registro.hasOwnProperty(bbvaEnum.FECHA) && registro.hasOwnProperty(bbvaEnum.DESC) ) {
+          newData[newData.length - 1][bbvaEnum.DESC] += ' ' + registro[bbvaEnum.DESC];
+        } else {
+          regReal = registro;
+          newData.push(regReal);
+        }
+      }
+
+      this.data = newData.map( registro => {
         let reg:generic = this.initReg();
 
         reg.fecha_reporte = this.dateReport;

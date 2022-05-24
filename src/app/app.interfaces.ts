@@ -260,9 +260,9 @@ export interface generic {
   observacion: string;
   concepto: string;
   tipo: string;
-  dia: number;
-  mes: number;
-  anio: number;
+  dia: string;
+  mes: string;
+  anio: number | string;
   hora_movimiento: string;
   saldo: number;
   id_interno: number;
