@@ -124,9 +124,9 @@ export class EditorPanelComponent implements OnInit {
         reg.fecha_reporte = this.dateReport;
         reg.hora_reporte = this.timeReport;
         
-        reg.dia = parseInt(registro[santanderEnum.FECHA].substring(1,3));
-        reg.mes = parseInt(registro[santanderEnum.FECHA].substring(3,5));
-        reg.anio = parseInt(registro[santanderEnum.FECHA].substring(5,9));
+        reg.dia = registro[santanderEnum.FECHA].substring(1,3);
+        reg.mes = registro[santanderEnum.FECHA].substring(3,5);
+        reg.anio = registro[santanderEnum.FECHA].substring(5,9);
         reg.hora_movimiento = registro[santanderEnum.HORA];
 
         if(numDay != reg.dia) {
@@ -176,8 +176,8 @@ export class EditorPanelComponent implements OnInit {
         reg.fecha_reporte = this.dateReport;
         reg.hora_reporte = this.timeReport;
         
-        reg.dia = parseInt(registro[multivaEnum.FECHA].substring(0,2));
-        reg.mes = parseInt(registro[multivaEnum.FECHA].substring(3,5));
+        reg.dia = registro[multivaEnum.FECHA].substring(0,2);
+        reg.mes = registro[multivaEnum.FECHA].substring(3,5);
         reg.anio = this.appService.formData.date.getFullYear();
         reg.hora_movimiento = registro[multivaEnum.HORA];
         
@@ -238,8 +238,8 @@ export class EditorPanelComponent implements OnInit {
         reg.fecha_reporte = this.dateReport;
         reg.hora_reporte = this.timeReport;
         
-        reg.dia = parseInt(registro[mifelEnum.FECHA].substring(0,2));
-        reg.mes = parseInt(registro[mifelEnum.FECHA].substring(3,5));
+        reg.dia = registro[mifelEnum.FECHA].substring(0,2);
+        reg.mes = registro[mifelEnum.FECHA].substring(3,5);
         reg.anio = this.appService.formData.date.getFullYear();
         reg.hora_movimiento = '';
         
@@ -316,8 +316,8 @@ export class EditorPanelComponent implements OnInit {
         reg.fecha_reporte = this.dateReport;
         reg.hora_reporte = this.timeReport;
         
-        reg.dia = registro[stpEnum.DIA];
-        reg.mes = registro[stpEnum.MES];
+        reg.dia = this.format2DigitNumber(registro[stpEnum.DIA]);
+        reg.mes = this.format2DigitNumber(registro[stpEnum.MES]);
         reg.anio = this.appService.formData.date.getFullYear();
         reg.hora_movimiento = registro[stpEnum.HORA];
         
@@ -365,8 +365,8 @@ export class EditorPanelComponent implements OnInit {
         reg.fecha_reporte = this.dateReport;
         reg.hora_reporte = this.timeReport;
         
-        reg.dia = parseInt(registro[bajioEnum.FECHA_MOVIMIENTO].substring(0,2));
-        reg.mes = dayjs(registro[bajioEnum.FECHA_MOVIMIENTO]).get('month') + 1;
+        reg.dia = registro[bajioEnum.FECHA_MOVIMIENTO].substring(0,2);
+        reg.mes = this.format2DigitNumber(dayjs(registro[bajioEnum.FECHA_MOVIMIENTO]).get('month') + 1);
         reg.anio = this.appService.formData.date.getFullYear();
         reg.hora_movimiento = registro[bajioEnum.HORA];
         
@@ -412,8 +412,8 @@ export class EditorPanelComponent implements OnInit {
         
         reg.hora_movimiento = '';
 
-        reg.dia = parseInt(registro[bbvaEnum.FECHA].substring(0,2));
-        reg.mes = parseInt(registro[bbvaEnum.FECHA].substring(3,5));
+        reg.dia = registro[bbvaEnum.FECHA].substring(0,2);
+        reg.mes = registro[bbvaEnum.FECHA].substring(3,5);
         reg.anio = this.appService.formData.date.getFullYear();
         
         reg.observacion = '';
@@ -458,8 +458,8 @@ export class EditorPanelComponent implements OnInit {
         reg.fecha_reporte = this.dateReport;
         reg.hora_reporte = this.timeReport;
         
-        reg.dia = parseInt(registro[afirmeEnum.FECHA].substring(0,2));
-        reg.mes = parseInt(registro[afirmeEnum.FECHA].substring(3,5));
+        reg.dia = registro[afirmeEnum.FECHA].substring(0,2);
+        reg.mes = registro[afirmeEnum.FECHA].substring(3,5);
         reg.anio = this.appService.formData.date.getFullYear();
 
         if(numDay != reg.dia) {
@@ -525,8 +525,8 @@ export class EditorPanelComponent implements OnInit {
       observacion: '',
       concepto: '',
       tipo: '',
-      dia: 0,
-      mes: 0,
+      dia: '0',
+      mes: '0',
       anio: 0,
       hora_movimiento: '',
       saldo: 0,
@@ -610,6 +610,10 @@ export class EditorPanelComponent implements OnInit {
     quantity = quantity.replace('$','');
     quantity = quantity.split(',').join('');
     return parseFloat(quantity);
+  }
+
+  format2DigitNumber(num: number): string {
+    return num < 10 ? '0'.concat(num.toString()) : num.toString();
   }
 
 }
