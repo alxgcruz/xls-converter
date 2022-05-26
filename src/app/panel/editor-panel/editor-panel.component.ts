@@ -5,7 +5,7 @@ import { AppService } from 'src/app/services/app.service';
 const EXCEL_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
 const EXCEL_EXTENSION = '.xlsx';
 import * as dayjs from 'dayjs';
-import { genEnum, multivaEnum, mifelEnum, stpEnum, bajioEnum, bbvaEnum, afirmeEnum, santanderEnum } from 'src/app/app.enums';
+import { genEnum, multivaEnum, mifelEnum, stpEnum, bajioEnum, bbvaEnum, afirmeEnum, santanderEnum, aspEnum } from 'src/app/app.enums';
 import { generic } from '../../app.interfaces';
 
 @Component({
@@ -93,6 +93,9 @@ export class EditorPanelComponent implements OnInit {
         case 'AFIRME':
             this.afirmeFormat(data);
           break;
+        case 'ASP INTEGRA':
+            this.aspFormat(data);
+          break;
         default:
           break;
       }
@@ -167,8 +170,6 @@ export class EditorPanelComponent implements OnInit {
 
   multivaFormat(data: any[]) {
     try {
-      let numDay: string | number = 0;
-      let counterByDay = 0;
 
       this.data = data.map((registro) => {
         let reg:generic = this.initReg();
@@ -191,18 +192,7 @@ export class EditorPanelComponent implements OnInit {
         return reg;
       });
 
-      this.data = this.data.reverse();
-
-      this.data = this.data.map( (registro: generic) => {
-        if(numDay != registro.dia) {
-          numDay = registro.dia;
-          counterByDay = 1;
-        } else {
-          counterByDay += 1;
-        }
-        registro.id_interno = counterByDay;
-        return registro;
-      });
+      this.data = this.reverseArray(this.data);
 
     }catch(err) {
       console.error(err);
@@ -356,8 +346,6 @@ export class EditorPanelComponent implements OnInit {
 
   bajioFormat(data: any[]) {
     try {
-      let numDay: string | number = 0;
-      let counterByDay = 0;
 
       this.data = data.map( registro => {
         let reg:generic = this.initReg();
@@ -380,18 +368,7 @@ export class EditorPanelComponent implements OnInit {
         return reg;
       });
 
-      this.data = this.data.reverse();
-
-      this.data = this.data.map((registro: generic) => {
-        if(numDay != registro.dia) {
-          numDay = registro.dia;
-          counterByDay = 1;
-        } else {
-          counterByDay += 1;
-        }
-        registro.id_interno = counterByDay;
-        return registro;
-      });
+      this.data = this.reverseArray(this.data);
 
     } catch(err) {
       console.error(err);
@@ -401,8 +378,6 @@ export class EditorPanelComponent implements OnInit {
 
   bbvaFormat(data: any[]) {
     try {
-      let numDay: string | number = 0;
-      let counterByDay = 0;
       let newData = [];
       let regReal: any = {};
 
@@ -440,18 +415,7 @@ export class EditorPanelComponent implements OnInit {
         return reg;
       });
 
-      this.data = this.data.reverse();
-
-      this.data = this.data.map((registro: generic) => {
-        if(numDay != registro.dia) {
-          numDay = registro.dia;
-          counterByDay = 1;
-        } else {
-          counterByDay += 1;
-        }
-        registro.id_interno = counterByDay;
-        return registro;
-      });
+      this.data = this.reverseArray(this.data);
 
     } catch (error) {
       console.error(error);
@@ -503,7 +467,70 @@ export class EditorPanelComponent implements OnInit {
     }
   }
 
-  compareFiles() {
+  aspFormat(data: any[]) {
+    try {
+      let saldo = 0;
+
+      this.data = data.map( (registro) => {
+        let reg:generic = this.initReg();
+
+        reg.fecha_reporte = this.dateReport;
+        reg.hora_reporte = this.timeReport;
+        
+        reg.hora_movimiento = registro[aspEnum.FECHA].substring(11,registro[aspEnum.FECHA].length);
+        reg.dia = registro[aspEnum.FECHA].substring(8,10);
+        reg.mes = registro[aspEnum.FECHA].substring(5,7);
+        reg.anio = this.appService.formData.date.getFullYear();
+
+        reg.observacion = '';
+        reg.concepto = registro[aspEnum.DESC].trim();
+
+        reg.entrada = registro[aspEnum.ABONO] ? this.formatNumber(registro[aspEnum.ABONO]) : 0.00;
+        if(registro[aspEnum.CARGO]) {
+          let cargo = this.formatNumber(registro[aspEnum.CARGO]);
+          reg.salida = cargo < 0 ? cargo * (-1) : cargo;
+        } else {
+          reg.salida = 0.00;
+        }
+        reg.saldo = 0;
+        reg.tipo = this.defineType(reg.concepto, reg.entrada, reg.salida);
+      
+        return reg;
+      });
+
+      this.data = this.reverseArray(this.data);
+
+    } catch (error) {
+      console.error(error);
+      this.catchError('QUITAR INFORMACIÓN DE CABECERA Y REVISE EL FORMATO DE LA FECHA');
+    }
+  }
+
+
+  /** 
+   * FUNCIONES DE UTILIDAD 
+   * 
+   * */
+
+  private initReg(): generic {
+    return {
+      entrada: 0,
+      salida: 0,
+      fecha_reporte: '',
+      hora_reporte: '',
+      observacion: '',
+      concepto: '',
+      tipo: '',
+      dia: '0',
+      mes: '0',
+      anio: 0,
+      hora_movimiento: '',
+      saldo: 0,
+      id_interno: 0,
+    };
+  }
+
+  private compareFiles() {
     let diffData: any[] = [];
     this.dataBase.forEach((element: generic) => {
       let idx = this.data.findIndex( (subel: generic) => {
@@ -529,25 +556,7 @@ export class EditorPanelComponent implements OnInit {
     }
   }
 
-  initReg(): generic {
-    return {
-      entrada: 0,
-      salida: 0,
-      fecha_reporte: '',
-      hora_reporte: '',
-      observacion: '',
-      concepto: '',
-      tipo: '',
-      dia: '0',
-      mes: '0',
-      anio: 0,
-      hora_movimiento: '',
-      saldo: 0,
-      id_interno: 0,
-    };
-  }
-
-  catchError(msg: string = '') {
+  private catchError(msg: string = '') {
     if(msg.length) {
       this.messages.push({severity:'error', summary: msg});
       this.showMessage = true;
@@ -555,8 +564,7 @@ export class EditorPanelComponent implements OnInit {
     this.data = []; 
   }
 
-  /** FUNCIONES DE UTILIDAD */
-  defineType(texto: string, entrada: number, salida: number): string {
+  private defineType(texto: string, entrada: number, salida: number): string {
     let tipo = '';
 
     if (entrada > 0 && salida > 0) {
@@ -577,8 +585,7 @@ export class EditorPanelComponent implements OnInit {
     return tipo;
   }
 
-
-  public exportAsExcelFile(json: any[], excelFileName: string): void {
+  private exportAsExcelFile(json: any[], excelFileName: string): void {
     const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(json);
     const workbook: XLSX.WorkBook = { 
       Sheets: { 'Hoja1': worksheet }, 
@@ -606,7 +613,7 @@ export class EditorPanelComponent implements OnInit {
     }
   }
 
-  formatAMPM(date: Date) {
+  private formatAMPM(date: Date) {
     let hours: number | string = date.getHours();
     let minutes: number | string = date.getMinutes();
     let ampm = hours >= 12 ? 'p.m.' : 'a.m.';
@@ -617,7 +624,7 @@ export class EditorPanelComponent implements OnInit {
     return strTime;
   }
 
-  formatNumber(quantity: string): number {
+  private formatNumber(quantity: string): number {
     quantity = quantity.replace('(','');
     quantity = quantity.replace(')','');
     quantity = quantity.replace('$','');
@@ -625,8 +632,27 @@ export class EditorPanelComponent implements OnInit {
     return parseFloat(quantity);
   }
 
-  format2DigitNumber(num: number): string {
+  private format2DigitNumber(num: number): string {
     return num < 10 ? '0'.concat(num.toString()) : num.toString();
+  }
+
+  private reverseArray(data: any[]): any[] {
+    let numDay: string | number = 0;
+    let counterByDay = 0;
+
+    data = data.reverse();
+
+    data = data.map((registro: generic) => {
+      if(numDay != registro.dia) {
+        numDay = registro.dia;
+        counterByDay = 1;
+      } else {
+        counterByDay += 1;
+      }
+      registro.id_interno = counterByDay;
+      return registro;
+    });
+    return data;
   }
 
 }

@@ -82,3 +82,10 @@ export enum afirmeEnum {
   ABONO = 'Abono',
   SALDO = 'Saldo'
 }
+
+export enum aspEnum {
+  FECHA = 'Fecha Operación',
+  DESC = 'Concepto',
+  ABONO = 'Abono',
+  CARGO = 'Monto'
+}
