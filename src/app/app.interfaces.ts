@@ -165,6 +165,7 @@ export const BUSINESS = [
     accounts : [
       {bank: 'MIFEL', account: '1600261505'},
       {bank: 'SANTANDER', account: '65506393345'},
+      {bank: 'STP', account: '646180251119200002'},
     ]
   },
   {
