@@ -5,7 +5,7 @@ import { AppService } from 'src/app/services/app.service';
 const EXCEL_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
 const EXCEL_EXTENSION = '.xlsx';
 import * as dayjs from 'dayjs';
-import { genEnum, multivaEnum, mifelEnum, stpEnum, bajioEnum, bbvaEnum, afirmeEnum, santanderEnum, aspEnum } from 'src/app/app.enums';
+import { genEnum, multivaEnum, mifelEnum, stpEnum, bajioEnum, bbvaEnum, afirmeEnum, santanderEnum, aspEnum, banorteEnum } from 'src/app/app.enums';
 import { generic } from '../../app.interfaces';
 
 @Component({
@@ -95,6 +95,10 @@ export class EditorPanelComponent implements OnInit {
           break;
         case 'ASP INTEGRA':
             this.aspFormat(data);
+          break;
+          break;
+        case 'BANORTE':
+            this.banorteFormat(data);
           break;
         default:
           break;
@@ -243,7 +247,7 @@ export class EditorPanelComponent implements OnInit {
 
         reg.observacion = '';
         reg.concepto = registro[mifelEnum.DESC].trim();
-        reg.entrada= registro.hasOwnProperty(mifelEnum.ABONO) ? this.formatNumber(registro[mifelEnum.ABONO]) : 0.00;
+        reg.entrada = registro.hasOwnProperty(mifelEnum.ABONO) ? this.formatNumber(registro[mifelEnum.ABONO]) : 0.00;
         reg.salida = registro.hasOwnProperty(mifelEnum.CARGO) ? this.formatNumber(registro[mifelEnum.CARGO]) : 0.00;
         reg.saldo = registro[mifelEnum.SALDO];
         reg.tipo = this.defineType(reg.concepto, reg.entrada, reg.salida);
@@ -506,6 +510,56 @@ export class EditorPanelComponent implements OnInit {
     }
   }
 
+  banorteFormat(data: any[]) {
+    try {
+      let numDay: string | number = 0;
+      let counterByDay = 0;
+
+      this.data = data.map( (registro) => {
+        let reg:generic = this.initReg();
+
+        reg.fecha_reporte = this.dateReport;
+        reg.hora_reporte = this.timeReport;
+
+        let fechaMov = this.formatDate(registro[banorteEnum.FECHA]);
+        
+        reg.dia = fechaMov.substring(0,2);
+        reg.mes = fechaMov.substring(3,5);
+        reg.anio = fechaMov.substring(6,10);
+        
+        if(numDay != reg.dia) {
+          numDay = reg.dia;
+          counterByDay = 1;
+        } else {
+          counterByDay += 1;
+        }
+        reg.id_interno = counterByDay;
+
+        reg.observacion = '';
+        reg.concepto = registro[banorteEnum.DESC].trim();
+        
+        let idx = reg.concepto.search('LIQ:');
+        reg.hora_movimiento = idx != -1 ? reg.concepto.slice(idx + 5, idx + 13).trim() : '';
+        
+        reg.entrada = registro[banorteEnum.ABONO] ? this.formatNumber(registro[banorteEnum.ABONO]) : 0.00;
+        if(registro[banorteEnum.CARGO]) {
+          let cargo = this.formatNumber(registro[banorteEnum.CARGO]);
+          reg.salida = cargo < 0 ? cargo * (-1) : cargo;
+        } else {
+          reg.salida = 0.00;
+        }
+        reg.saldo = registro[banorteEnum.SALDO];
+        reg.tipo = this.defineType(reg.concepto, reg.entrada, reg.salida);
+      
+        return reg;
+      });
+
+    } catch (error) {
+      console.error(error);
+      this.catchError('ELIMINAR COLUMNA *TRANS* Y REVISE EL FORMATO DE LA FECHA');
+    }
+  }
+
 
   /** 
    * FUNCIONES DE UTILIDAD 
@@ -624,12 +678,16 @@ export class EditorPanelComponent implements OnInit {
     return strTime;
   }
 
-  private formatNumber(quantity: string): number {
-    quantity = quantity.replace('(','');
-    quantity = quantity.replace(')','');
-    quantity = quantity.replace('$','');
-    quantity = quantity.split(',').join('');
-    return parseFloat(quantity);
+  private formatNumber(quantity: any): number {
+    if (isNaN(quantity)) {
+      quantity = quantity.replace('(','');
+      quantity = quantity.replace(')','');
+      quantity = quantity.replace('$','');
+      quantity = quantity.split(',').join('');
+      return parseFloat(quantity);
+    } else {
+      return quantity;
+    }
   }
 
   private format2DigitNumber(num: number): string {
@@ -653,6 +711,64 @@ export class EditorPanelComponent implements OnInit {
       return registro;
     });
     return data;
+  }
+
+  private formatDate(date: string) {
+    date = date.replace('.','');
+    let day = date.split('/')[0];
+    let monthText = date.split('/')[1];
+    let month = '00';
+    let year = date.split('/')[2];
+
+      if(monthText.includes('Ene'))
+      {
+        month = '01';
+      }
+      else if(monthText.includes('Feb'))
+      {
+        month = '02';
+      }
+      else if(monthText.includes('Mar'))
+      {
+        month = '03';
+      }
+      else if(monthText.includes('Abr'))
+      {
+        month = '04';
+      }
+      else if(monthText.includes('May'))
+      {
+        month = '05';
+      }
+      else if(monthText.includes('Jun'))
+      {
+        month = '06';
+      }
+      else if(monthText.includes('Jul'))
+      {
+        month = '07';
+      }
+      else if(monthText.includes('Ago'))
+      {
+        month = '08';
+      }
+      else if(monthText.includes('Sep'))
+      {
+        month = '09';
+      }
+      else if(monthText.includes('Oct'))
+      {
+        month = '10';
+      }
+      else if(monthText.includes('Nov'))
+      {
+        month = '11';
+      }
+      else if(monthText.includes('Dic'))
+      {
+        month = '12';
+      }
+    return `${day}-${month}-${year}`;
   }
 
 }

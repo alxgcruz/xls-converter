@@ -216,6 +216,7 @@ export const BUSINESS = [
     name: 'TIERRA LEVITA',
     accounts : [
       {bank: 'SANTANDER', account: '65508090249'},
+      {bank: 'BBVA', account: '0118819661'},
     ]
   },
   {

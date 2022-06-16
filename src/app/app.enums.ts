@@ -89,3 +89,11 @@ export enum aspEnum {
   ABONO = 'Abono',
   CARGO = 'Monto'
 }
+
+export enum banorteEnum {
+  FECHA = 'Fecha',
+  DESC = 'Concepto',
+  ABONO = 'Depositos',
+  CARGO = 'Retiros',
+  SALDO = 'Saldos'
+}
