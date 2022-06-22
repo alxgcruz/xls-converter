@@ -189,7 +189,7 @@ export class EditorPanelComponent implements OnInit {
         reg.observacion = '';
         reg.concepto = registro[multivaEnum.DESC].toString().trim();
         reg.entrada = registro[multivaEnum.ABONO] ? this.formatNumber(registro[multivaEnum.ABONO]) : 0.00;
-        reg.salida = registro[multivaEnum.CARGO] ? this.formatNumber(registro[multivaEnum.CARGO]) : 0.00;
+        reg.salida = registro[multivaEnum.CARGO] ? this.formatNumber(registro[multivaEnum.CARGO]) * -1 : 0.00;
         reg.saldo = this.formatNumber(registro[multivaEnum.SALDO]);
         reg.tipo = this.defineType(reg.concepto, reg.entrada, reg.salida);
         
@@ -249,7 +249,7 @@ export class EditorPanelComponent implements OnInit {
         reg.concepto = registro[mifelEnum.DESC].trim();
         reg.entrada = registro.hasOwnProperty(mifelEnum.ABONO) ? this.formatNumber(registro[mifelEnum.ABONO]) : 0.00;
         reg.salida = registro.hasOwnProperty(mifelEnum.CARGO) ? this.formatNumber(registro[mifelEnum.CARGO]) : 0.00;
-        reg.saldo = registro[mifelEnum.SALDO];
+        reg.saldo = this.formatNumber(registro[mifelEnum.SALDO]);
         reg.tipo = this.defineType(reg.concepto, reg.entrada, reg.salida);
 
         return reg;
@@ -326,17 +326,9 @@ export class EditorPanelComponent implements OnInit {
         reg.observacion = '';
         reg.concepto = registro[stpEnum.MOV].trim();
 
-        if(registro[stpEnum.ABONO] === '- ') {
-          reg.entrada = 0.00;
-        } else {
-          reg.entrada = isNaN(registro[stpEnum.ABONO]) ? this.formatNumber(registro[stpEnum.ABONO]) : registro[stpEnum.ABONO];
-        }
-        if(registro[stpEnum.CARGO] === '- ') {
-          reg.salida = 0.00;
-        } else {
-          reg.salida = isNaN(registro[stpEnum.CARGO]) ? this.formatNumber(registro[stpEnum.CARGO]) : registro[stpEnum.CARGO];
-        }
-        reg.saldo = isNaN(registro[stpEnum.SALDO]) ? this.formatNumber(registro[stpEnum.SALDO]) : registro[stpEnum.SALDO];
+        reg.entrada = registro[stpEnum.ABONO] === '- ' ? 0.00 : this.formatNumber(registro[stpEnum.ABONO]);
+        reg.salida = registro[stpEnum.CARGO] === '- ' ? 0.00 : this.formatNumber(registro[stpEnum.CARGO]);
+        reg.saldo = this.formatNumber(registro[stpEnum.SALDO]);
         reg.tipo = this.defineType(reg.concepto, reg.entrada, reg.salida);
 
         return reg;
@@ -411,9 +403,9 @@ export class EditorPanelComponent implements OnInit {
         reg.observacion = '';
         reg.concepto = registro[bbvaEnum.DESC].trim();
 
-        reg.entrada = registro[bbvaEnum.ABONO] ? registro[bbvaEnum.ABONO] : 0.00;
-        reg.salida = registro[bbvaEnum.CARGO] ? registro[bbvaEnum.CARGO] : 0.00;
-        reg.saldo = registro[bbvaEnum.SALDO];
+        reg.entrada = registro[bbvaEnum.ABONO] ? this.formatNumber(registro[bbvaEnum.ABONO]) : 0.00;
+        reg.salida = registro[bbvaEnum.CARGO] ? this.formatNumber(registro[bbvaEnum.CARGO]) : 0.00;
+        reg.saldo = this.formatNumber(registro[bbvaEnum.SALDO]);
         reg.tipo = this.defineType(reg.concepto, reg.entrada, reg.salida);
 
         return reg;
@@ -473,8 +465,6 @@ export class EditorPanelComponent implements OnInit {
 
   aspFormat(data: any[]) {
     try {
-      let saldo = 0;
-
       this.data = data.map( (registro) => {
         let reg:generic = this.initReg();
 
@@ -665,17 +655,6 @@ export class EditorPanelComponent implements OnInit {
     if(this.data.length) {
       this.exportAsExcelFile(this.data, name);
     }
-  }
-
-  private formatAMPM(date: Date) {
-    let hours: number | string = date.getHours();
-    let minutes: number | string = date.getMinutes();
-    let ampm = hours >= 12 ? 'p.m.' : 'a.m.';
-    hours = hours % 12;
-    hours = hours ? hours : 12; // the hour '0' should be '12'
-    minutes = minutes < 10 ? '0'+ minutes : minutes;
-    let strTime = hours + ':' + minutes + ' ' + ampm;
-    return strTime;
   }
 
   private formatNumber(quantity: any): number {
