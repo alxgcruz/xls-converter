@@ -5,6 +5,7 @@ import { PanelComponent } from './panel.component';
 import { FormPanelModule } from './form-panel/form-panel.module';
 import { EditorPanelModule } from './editor-panel/editor-panel.module';
 import { CardModule } from 'primeng/card';
+import { TooltipModule } from 'primeng/tooltip';
 
 @NgModule({
   declarations: [
@@ -14,7 +15,8 @@ import { CardModule } from 'primeng/card';
     PanelRoutingModule,
     FormPanelModule,
     EditorPanelModule,
-    CardModule
+    CardModule,
+    TooltipModule
   ],
   exports: [
     PanelComponent],

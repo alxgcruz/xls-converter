@@ -7,9 +7,12 @@ import { Component, OnInit } from '@angular/core';
 })
 export class PanelComponent implements OnInit {
 
+  version: string = 'v';
+
   constructor() { }
 
   ngOnInit(): void {
+    this.version += '1.0.1';
   }
 
 }
