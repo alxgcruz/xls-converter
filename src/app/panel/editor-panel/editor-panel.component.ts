@@ -659,11 +659,22 @@ export class EditorPanelComponent implements OnInit {
 
   private formatNumber(quantity: any): number {
     if (isNaN(quantity)) {
-      quantity = quantity.replace('(','');
-      quantity = quantity.replace(')','');
-      quantity = quantity.replace('$','');
-      quantity = quantity.split(',').join('');
-      return parseFloat(quantity);
+      let quant: string = quantity.replace('(','');
+      quant = quant.replace(')','');
+      quant = quant.replace('$','');
+      quant = quant.replace(' ','');
+      // quant = quant.split(',').join('');
+      let comma = quant.indexOf(',');
+      let dot = quant.indexOf('.');
+      if(comma > dot) {
+        quant = quant.split('.').join('');
+        quant = quant.replace(',','.');
+      } else {
+        quant = quant.split(',').join('');
+        // quant = quant.replace('.',',');
+      }
+      console.log({quant, quantity});
+      return parseFloat(quant);
     } else {
       return quantity;
     }
