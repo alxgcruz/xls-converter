@@ -5,7 +5,7 @@ import { AppService } from 'src/app/services/app.service';
 const EXCEL_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
 const EXCEL_EXTENSION = '.xlsx';
 import * as dayjs from 'dayjs';
-import { genEnum, multivaEnum, mifelEnum, stpEnum, bajioEnum, bbvaEnum, afirmeEnum, santanderEnum, aspEnum, banorteEnum } from 'src/app/app.enums';
+import { genEnum, multivaEnum, mifelEnum, stpEnum, bajioEnum, bbvaEnum, afirmeEnum, santanderEnum, aspEnum, banorteEnum, banregioEnum } from 'src/app/app.enums';
 import { generic } from '../../app.interfaces';
 
 @Component({
@@ -96,9 +96,11 @@ export class EditorPanelComponent implements OnInit {
         case 'ASP INTEGRA':
             this.aspFormat(data);
           break;
-          break;
         case 'BANORTE':
             this.banorteFormat(data);
+          break;
+        case 'BANREGIO':
+            this.banregioFormat(data);
           break;
         default:
           break;
@@ -550,6 +552,51 @@ export class EditorPanelComponent implements OnInit {
     }
   }
 
+  banregioFormat(data: any[]) {
+    try {
+      let numDay: string | number = 0;
+      let counterByDay = 0;
+
+      this.data = data.map( (registro) => {
+        let reg:generic = this.initReg();
+
+        reg.fecha_reporte = this.dateReport;
+        reg.hora_reporte = this.timeReport;
+
+        let fechaMov = registro[banregioEnum.FECHA];
+        
+        reg.dia = fechaMov.substring(0,2);
+        reg.mes = fechaMov.substring(3,5);
+        reg.anio = fechaMov.substring(6,10);
+        
+        if(numDay != reg.dia) {
+          numDay = reg.dia;
+          counterByDay = 1;
+        } else {
+          counterByDay += 1;
+        }
+        reg.id_interno = counterByDay;
+
+        reg.observacion = registro[banregioEnum.OBS];
+        reg.concepto = registro[banregioEnum.DESC].trim();
+        
+        let idx = reg.concepto.search('LIQ:');
+        reg.hora_movimiento = idx != -1 ? reg.concepto.slice(idx + 5, idx + 13).trim() : '';
+        
+        reg.entrada = registro[banregioEnum.ABONO] ? this.formatNumber(registro[banregioEnum.ABONO]) : 0.00;
+        reg.salida = registro[banregioEnum.CARGO] ? this.formatNumber(registro[banregioEnum.CARGO]) : 0.00;
+        reg.saldo = registro[banregioEnum.SALDO] ? this.formatNumber(registro[banregioEnum.SALDO]) : 0.00;
+        reg.tipo = this.defineType(reg.concepto, reg.entrada, reg.salida);
+      
+        return reg;
+      });
+
+    } catch (error) {
+      console.error(error);
+      this.catchError('ELIMINAR CABECERA');
+    }
+  }
+
 
   /** 
    * FUNCIONES DE UTILIDAD 
@@ -666,14 +713,15 @@ export class EditorPanelComponent implements OnInit {
       // quant = quant.split(',').join('');
       let comma = quant.indexOf(',');
       let dot = quant.indexOf('.');
+      
       if(comma > dot) {
         quant = quant.split('.').join('');
         quant = quant.replace(',','.');
       } else {
-        quant = quant.split(',').join('');
-        // quant = quant.replace('.',',');
+        if(comma > 0) {
+          quant = quant.split(',').join('');
+        }
       }
-      console.log({quant, quantity});
       return parseFloat(quant);
     } else {
       return quantity;
