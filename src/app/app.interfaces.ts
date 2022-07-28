@@ -116,8 +116,8 @@ export const BUSINESS = [
     name: 'FJ',
     accounts : [
       {bank: 'AFIRME', account: '16291012160'},
-      {bank: 'STP', account: '6461802511190000008'},
       {bank: 'STP', account: '646180251130800009'},
+      {bank: 'STP', account: '6461802511190000008'},
     ]
   },
   {
@@ -212,8 +212,8 @@ export const BUSINESS = [
     accounts : [
       {bank: 'AFIRME', account: '16291012284'},
       {bank: 'AFIRME DLS', account: '16291008368'},
-      {bank: 'STP', account: '646180251102700001'},
       {bank: 'STP', account: '646180251135500003'},
+      {bank: 'STP', account: '646180251102700001'},
     ]
   },
   {
@@ -243,6 +243,7 @@ export const BUSINESS = [
       {bank: 'BBVA', account: '0117566190'},
       {bank: 'BBVA DLS', account: '01175662638'},
       {bank: 'SANTANDER', account: '92001094274'},
+      {bank: 'STP', account: '646180251114900006'},
     ]
   },
   {

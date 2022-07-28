@@ -275,7 +275,7 @@ export class EditorPanelComponent implements OnInit {
 
       for (let index = 0; index < data.length; index++) {
         const registro = data[index];
-        if (!registro.hasOwnProperty(stpEnum.MOV)) {
+        if (!registro.hasOwnProperty(stpEnum.MOV) && !registro.hasOwnProperty(stpEnum.TRX) ) {
           diaReg = registro['Hora'].substring(0,2);
           mesReg = registro['Hora'].substring(3,5);
         } else {
@@ -290,7 +290,12 @@ export class EditorPanelComponent implements OnInit {
         } else {
           let idx = newData.findIndex((value) => value['id'] === regReal['id']);
           if (idx >= 0) {
-            newData[idx][stpEnum.MOV] += ' ' + registro[stpEnum.MOV];
+            if(registro.hasOwnProperty(stpEnum.MOV)){
+              newData[idx][stpEnum.MOV] += ' ' + registro[stpEnum.MOV];
+            }
+            if(registro.hasOwnProperty(stpEnum.TRX)){
+              newData[idx][stpEnum.TRX] += ' ' + registro[stpEnum.TRX];
+            }
             if(registro.hasOwnProperty(stpEnum.ABONO)) {
               let quaPart = isNaN(registro[stpEnum.ABONO]) ? this.formatNumber(registro[stpEnum.ABONO]) : registro[stpEnum.ABONO];
               if(newData[idx][stpEnum.ABONO] === '- ') {
@@ -326,7 +331,12 @@ export class EditorPanelComponent implements OnInit {
 
         reg.id_interno = counterByDay;
         reg.observacion = '';
-        reg.concepto = registro[stpEnum.MOV].trim();
+        if(registro.hasOwnProperty(stpEnum.MOV)){
+          reg.concepto = registro[stpEnum.MOV].trim();
+        }
+        if(registro.hasOwnProperty(stpEnum.TRX)){
+          reg.concepto = registro[stpEnum.TRX].trim();
+        }
 
         reg.entrada = registro[stpEnum.ABONO] === '- ' ? 0.00 : this.formatNumber(registro[stpEnum.ABONO]);
         reg.salida = registro[stpEnum.CARGO] === '- ' ? 0.00 : this.formatNumber(registro[stpEnum.CARGO]);

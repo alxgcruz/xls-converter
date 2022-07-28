@@ -47,6 +47,7 @@ export enum mifelEnum {
 
 export enum stpEnum {
   SALDO = 'Saldo',
+  TRX = 'Transacción',
   MOV = 'Movimiento',
   ABONO = 'Abono',
   CARGO = 'Cargo',
@@ -96,4 +97,13 @@ export enum banorteEnum {
   ABONO = 'Depositos',
   CARGO = 'Retiros',
   SALDO = 'Saldos'
+}
+
+export enum banregioEnum {
+  FECHA = 'Fecha',
+  DESC = 'Descripción',
+  OBS = 'Referancia',
+  ABONO = 'Abonos',
+  CARGO = 'Cargo',
+  SALDO = 'Saldo'
 }
