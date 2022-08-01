@@ -5,7 +5,7 @@ import { AppService } from 'src/app/services/app.service';
 const EXCEL_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
 const EXCEL_EXTENSION = '.xlsx';
 import * as dayjs from 'dayjs';
-import { genEnum, multivaEnum, mifelEnum, stpEnum, bajioEnum, bbvaEnum, afirmeEnum, santanderEnum, aspEnum, banorteEnum, banregioEnum } from 'src/app/app.enums';
+import { genEnum, multivaEnum, mifelEnum, stpEnum, bajioEnum, bbvaEnum, afirmeEnum, santanderEnum, aspEnum, banorteEnum, banregioEnum, praxiEnum } from 'src/app/app.enums';
 import { generic } from '../../app.interfaces';
 
 @Component({
@@ -273,6 +273,7 @@ export class EditorPanelComponent implements OnInit {
       let regReal: any = {};
       let newData = [];
 
+
       for (let index = 0; index < data.length; index++) {
         const registro = data[index];
         if (!registro.hasOwnProperty(stpEnum.MOV) && !registro.hasOwnProperty(stpEnum.TRX) ) {
@@ -514,48 +515,13 @@ export class EditorPanelComponent implements OnInit {
 
   banorteFormat(data: any[]) {
     try {
-      let numDay: string | number = 0;
-      let counterByDay = 0;
 
-      this.data = data.map( (registro) => {
-        let reg:generic = this.initReg();
-
-        reg.fecha_reporte = this.dateReport;
-        reg.hora_reporte = this.timeReport;
-
-        let fechaMov = this.formatDate(registro[banorteEnum.FECHA]);
-        
-        reg.dia = fechaMov.substring(0,2);
-        reg.mes = fechaMov.substring(3,5);
-        reg.anio = fechaMov.substring(6,10);
-        
-        if(numDay != reg.dia) {
-          numDay = reg.dia;
-          counterByDay = 1;
-        } else {
-          counterByDay += 1;
-        }
-        reg.id_interno = counterByDay;
-
-        reg.observacion = '';
-        reg.concepto = registro[banorteEnum.DESC].trim();
-        
-        let idx = reg.concepto.search('LIQ:');
-        reg.hora_movimiento = idx != -1 ? reg.concepto.slice(idx + 5, idx + 13).trim() : '';
-        
-        reg.entrada = registro[banorteEnum.ABONO] ? this.formatNumber(registro[banorteEnum.ABONO]) : 0.00;
-        if(registro[banorteEnum.CARGO]) {
-          let cargo = this.formatNumber(registro[banorteEnum.CARGO]);
-          reg.salida = cargo < 0 ? cargo * (-1) : cargo;
-        } else {
-          reg.salida = 0.00;
-        }
-        reg.saldo = registro[banorteEnum.SALDO];
-        reg.tipo = this.defineType(reg.concepto, reg.entrada, reg.salida);
+      if(this.appService.formData.business.name === 'PRAXI') {
+        this.praxiBanorte(data);
+      } else {
+        this.anyBanorte(data);
+      }
       
-        return reg;
-      });
-
     } catch (error) {
       console.error(error);
       this.catchError('ELIMINAR COLUMNA *TRANS* Y REVISE EL FORMATO DE LA FECHA');
@@ -605,6 +571,93 @@ export class EditorPanelComponent implements OnInit {
       console.error(error);
       this.catchError('ELIMINAR CABECERA');
     }
+  }
+
+
+
+  private praxiBanorte(data: any) {
+    
+    let numDay: string | number = 0;
+    let counterByDay = 0;
+
+    this.data = data.map( (registro: any) => {
+      let reg:generic = this.initReg();
+
+      reg.fecha_reporte = this.dateReport;
+      reg.hora_reporte = this.timeReport;
+
+      let fechaMov = registro[praxiEnum.FECHA];
+      
+      reg.dia = fechaMov.substring(0,2);
+      reg.mes = fechaMov.substring(3,5);
+      reg.anio = fechaMov.substring(6,10);
+      
+      if(numDay != reg.dia) {
+        numDay = reg.dia;
+        counterByDay = 1;
+      } else {
+        counterByDay += 1;
+      }
+      reg.id_interno = counterByDay;
+
+      reg.observacion = registro[praxiEnum.OBS].toString().trim();
+      reg.concepto = registro[praxiEnum.DESC].trim();
+      
+      let idx = reg.concepto.search('LIQ:');
+      reg.hora_movimiento = idx != -1 ? reg.concepto.slice(idx + 5, idx + 13).trim() : '';
+      
+      reg.entrada = isNaN(registro[praxiEnum.ABONO]) ? 0.00 : registro[praxiEnum.ABONO];
+      reg.salida = isNaN(registro[praxiEnum.CARGO]) ? 0.00 : registro[praxiEnum.CARGO];
+      reg.saldo = registro[praxiEnum.SALDO];
+      reg.tipo = this.defineType(reg.concepto, reg.entrada, reg.salida);
+    
+      return reg;
+    });
+  }
+
+  private anyBanorte(data: any) {
+
+    let numDay: string | number = 0;
+    let counterByDay = 0;
+
+    this.data = data.map( (registro: any) => {
+      let reg:generic = this.initReg();
+
+      reg.fecha_reporte = this.dateReport;
+      reg.hora_reporte = this.timeReport;
+
+      let fechaMov = this.formatDate(registro[banorteEnum.FECHA]);
+      
+      reg.dia = fechaMov.substring(0,2);
+      reg.mes = fechaMov.substring(3,5);
+      reg.anio = fechaMov.substring(6,10);
+      
+      if(numDay != reg.dia) {
+        numDay = reg.dia;
+        counterByDay = 1;
+      } else {
+        counterByDay += 1;
+      }
+      reg.id_interno = counterByDay;
+
+      reg.observacion = '';
+      reg.concepto = registro[banorteEnum.DESC].trim();
+      
+      let idx = reg.concepto.search('LIQ:');
+      reg.hora_movimiento = idx != -1 ? reg.concepto.slice(idx + 5, idx + 13).trim() : '';
+      
+      reg.entrada = registro[banorteEnum.ABONO] ? this.formatNumber(registro[banorteEnum.ABONO]) : 0.00;
+      if(registro[banorteEnum.CARGO]) {
+        let cargo = this.formatNumber(registro[banorteEnum.CARGO]);
+        reg.salida = cargo < 0 ? cargo * (-1) : cargo;
+      } else {
+        reg.salida = 0.00;
+      }
+      reg.saldo = registro[banorteEnum.SALDO];
+      reg.tipo = this.defineType(reg.concepto, reg.entrada, reg.salida);
+    
+      return reg;
+    });
   }
 
 
@@ -818,5 +871,7 @@ export class EditorPanelComponent implements OnInit {
       }
     return `${day}-${month}-${year}`;
   }
+
+  
 
 }

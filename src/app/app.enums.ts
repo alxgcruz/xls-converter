@@ -99,10 +99,19 @@ export enum banorteEnum {
   SALDO = 'Saldos'
 }
 
+export enum praxiEnum {
+  FECHA = 'FECHA DE OPERACIÓN',
+  DESC = 'DESCRIPCIÓN DETALLADA',
+  ABONO = 'DEPÓSITOS',
+  CARGO = 'RETIROS',
+  SALDO = 'SALDO',
+  OBS = 'DESCRIPCIÓN'
+}
+
 export enum banregioEnum {
   FECHA = 'Fecha',
   DESC = 'Descripción',
-  OBS = 'Referancia',
+  OBS = 'Referencia',
   ABONO = 'Abonos',
   CARGO = 'Cargo',
   SALDO = 'Saldo'

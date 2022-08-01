@@ -60,6 +60,7 @@ export const BUSINESS = [
     name: 'DAS',
     accounts : [
       {bank: 'BBVA', account: '0110690503'},
+      {bank: 'AFIRME', account: '016291012446'},
     ]
   },
   {
