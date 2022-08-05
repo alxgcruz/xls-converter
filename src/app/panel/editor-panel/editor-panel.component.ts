@@ -158,13 +158,9 @@ export class EditorPanelComponent implements OnInit {
         registro[santanderEnum.REF] = registro.hasOwnProperty(santanderEnum.REF) ? registro[santanderEnum.REF].toString().trim() : '';
         reg.concepto = registro.hasOwnProperty(santanderEnum.CONCEPTO) ? registro[santanderEnum.CONCEPTO].toString().trim() : '';
         
-        if(!reg.concepto.length) {
-          reg.observacion = registro[santanderEnum.DESC] + " " + registro[santanderEnum.REF];
-          reg.tipo = this.defineType(reg.observacion, reg.entrada, reg.salida);
-        } else {
-          reg.observacion = '';
-          reg.tipo = this.defineType(reg.concepto, reg.entrada, reg.salida);
-        }
+        reg.observacion = `${registro[santanderEnum.REF] || ''} ${registro[santanderEnum.CVE] || '' }`;
+        
+        reg.tipo = reg.concepto.length ? this.defineType(reg.concepto, reg.entrada, reg.salida) : this.defineType(reg.observacion, reg.entrada, reg.salida);
 
         return reg;
       });
@@ -188,7 +184,7 @@ export class EditorPanelComponent implements OnInit {
         reg.anio = this.appService.formData.date.getFullYear();
         reg.hora_movimiento = registro[multivaEnum.HORA];
         
-        reg.observacion = '';
+        reg.observacion = registro[multivaEnum.REF] ? registro[multivaEnum.REF].toString().trim() : '';
         reg.concepto = registro[multivaEnum.DESC].toString().trim();
         reg.entrada = registro[multivaEnum.ABONO] ? this.formatNumber(registro[multivaEnum.ABONO]) : 0.00;
         reg.salida = registro[multivaEnum.CARGO] ? this.formatNumber(registro[multivaEnum.CARGO]) * -1 : 0.00;
@@ -247,7 +243,7 @@ export class EditorPanelComponent implements OnInit {
         }
         reg.id_interno = counterByDay;
 
-        reg.observacion = '';
+        reg.observacion = registro[mifelEnum.FOP] ? registro[mifelEnum.FOP].trim() : '';
         reg.concepto = registro[mifelEnum.DESC].trim();
         reg.entrada = registro.hasOwnProperty(mifelEnum.ABONO) ? this.formatNumber(registro[mifelEnum.ABONO]) : 0.00;
         reg.salida = registro.hasOwnProperty(mifelEnum.CARGO) ? this.formatNumber(registro[mifelEnum.CARGO]) : 0.00;
@@ -363,7 +359,8 @@ export class EditorPanelComponent implements OnInit {
         reg.hora_reporte = this.timeReport;
         
         reg.dia = registro[bajioEnum.FECHA_MOVIMIENTO].substring(0,2);
-        reg.mes = this.format2DigitNumber(dayjs(registro[bajioEnum.FECHA_MOVIMIENTO]).get('month') + 1);
+        reg.mes = this.formatMonth(registro[bajioEnum.FECHA_MOVIMIENTO].substring(3,6));
+        
         reg.anio = this.appService.formData.date.getFullYear();
         reg.hora_movimiento = registro[bajioEnum.HORA];
         
@@ -553,7 +550,7 @@ export class EditorPanelComponent implements OnInit {
         }
         reg.id_interno = counterByDay;
 
-        reg.observacion = registro[banregioEnum.OBS];
+        reg.observacion = registro[banregioEnum.OBS] ? registro[banregioEnum.OBS] : '';
         reg.concepto = registro[banregioEnum.DESC].trim();
         
         let idx = reg.concepto.search('LIQ:');
@@ -818,60 +815,63 @@ export class EditorPanelComponent implements OnInit {
     date = date.replace('.','');
     let day = date.split('/')[0];
     let monthText = date.split('/')[1];
-    let month = '00';
+    let month = this.formatMonth(monthText);
     let year = date.split('/')[2];
-
-      if(monthText.includes('Ene'))
-      {
-        month = '01';
-      }
-      else if(monthText.includes('Feb'))
-      {
-        month = '02';
-      }
-      else if(monthText.includes('Mar'))
-      {
-        month = '03';
-      }
-      else if(monthText.includes('Abr'))
-      {
-        month = '04';
-      }
-      else if(monthText.includes('May'))
-      {
-        month = '05';
-      }
-      else if(monthText.includes('Jun'))
-      {
-        month = '06';
-      }
-      else if(monthText.includes('Jul'))
-      {
-        month = '07';
-      }
-      else if(monthText.includes('Ago'))
-      {
-        month = '08';
-      }
-      else if(monthText.includes('Sep'))
-      {
-        month = '09';
-      }
-      else if(monthText.includes('Oct'))
-      {
-        month = '10';
-      }
-      else if(monthText.includes('Nov'))
-      {
-        month = '11';
-      }
-      else if(monthText.includes('Dic'))
-      {
-        month = '12';
-      }
+      
     return `${day}-${month}-${year}`;
   }
 
-  
+  private formatMonth(monthText: string): string {
+    let month = '00';
+    if(monthText.includes('Ene'))
+    {
+      month = '01';
+    }
+    else if(monthText.includes('Feb'))
+    {
+      month = '02';
+    }
+    else if(monthText.includes('Mar'))
+    {
+      month = '03';
+    }
+    else if(monthText.includes('Abr'))
+    {
+      month = '04';
+    }
+    else if(monthText.includes('May'))
+    {
+      month = '05';
+    }
+    else if(monthText.includes('Jun'))
+    {
+      month = '06';
+    }
+    else if(monthText.includes('Jul'))
+    {
+      month = '07';
+    }
+    else if(monthText.includes('Ago'))
+    {
+      month = '08';
+    }
+    else if(monthText.includes('Sep'))
+    {
+      month = '09';
+    }
+    else if(monthText.includes('Oct'))
+    {
+      month = '10';
+    }
+    else if(monthText.includes('Nov'))
+    {
+      month = '11';
+    }
+    else if(monthText.includes('Dic'))
+    {
+      month = '12';
+    }
+    return month;
+  }
 
 }

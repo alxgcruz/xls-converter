@@ -24,7 +24,8 @@ export enum santanderEnum {
   DESC = 'Descripción',
   REF = 'Referencia',
   MOV = 'Cargo/Abono',
-  CONCEPTO = 'Concepto'
+  CONCEPTO = 'Concepto',
+  CVE = 'Clave de Rastreo',
 }
 
 export enum multivaEnum {
@@ -34,6 +35,7 @@ export enum multivaEnum {
   SALDO = 'Saldo',
   ABONO = 'Abono',
   CARGO = 'Cargo',
+  REF = 'Referencia',
 }
 
 export enum mifelEnum {
@@ -43,6 +45,7 @@ export enum mifelEnum {
   FECHA = 'Fecha',
   ABONO = 'Abono',
   CARGO = 'Cargo',
+  FOP = 'Folio de Operacion',
 }
 
 export enum stpEnum {
