@@ -259,7 +259,6 @@ export const BUSINESS = [
   {
     name: 'KOSIUKO',
     accounts : [
-      {bank: 'ASP INTEGRA', account: '659803000000277782'},
       {bank: 'ALQUIMIA', account: '659803000000277782'},
       {bank: 'BANBAJIO', account: '412985220201'},
     ]
