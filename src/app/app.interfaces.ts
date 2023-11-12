@@ -45,6 +45,9 @@ export const BANKS = [
   {name: 'SANTANDER DLS'},
   {name: 'BBVA DLS'},
   {name: 'AFIRME DLS'},
+  {name: 'HSBC'},
+  {name: 'ALQUIMIA'},
+  {name: 'AZTECA'}
 ]
 
 export const BUSINESS = [
@@ -54,6 +57,7 @@ export const BUSINESS = [
       {bank: 'AFIRME', account: '16291012454'},
       {bank: 'BBVA', account: '0110690287'},
       {bank: 'STP', account: '646180251113600006'},
+      {bank: 'HSBC', account: '4069702934'},
     ]
   },
   {
@@ -83,6 +87,7 @@ export const BUSINESS = [
     name: 'ANCLAJE',
     accounts : [
       {bank: 'STP', account: '646180251115000002'},
+      {bank: 'AZTECA', account: '01720119535847'},
     ]
   },
   {
@@ -172,6 +177,7 @@ export const BUSINESS = [
       {bank: 'MIFEL', account: '1600261505'},
       {bank: 'SANTANDER', account: '65506393345'},
       {bank: 'STP', account: '646180251119200002'},
+      {bank: 'BANORTE', account: '646180251119200002'},
     ]
   },
   {
@@ -251,9 +257,11 @@ export const BUSINESS = [
     ]
   },
   {
-    name: 'KIOSUKO',
+    name: 'KOSIUKO',
     accounts : [
       {bank: 'ASP INTEGRA', account: '659803000000277782'},
+      {bank: 'ALQUIMIA', account: '659803000000277782'},
+      {bank: 'BANBAJIO', account: '412985220201'},
     ]
   },
   {

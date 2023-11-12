@@ -5,7 +5,7 @@ import { AppService } from 'src/app/services/app.service';
 const EXCEL_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
 const EXCEL_EXTENSION = '.xlsx';
 import * as dayjs from 'dayjs';
-import { genEnum, multivaEnum, mifelEnum, stpEnum, bajioEnum, bbvaEnum, afirmeEnum, santanderEnum, aspEnum, banorteEnum, banregioEnum, praxiEnum } from 'src/app/app.enums';
+import { genEnum, multivaEnum, mifelEnum, stpEnum, bajioEnum, bbvaEnum, afirmeEnum, santanderEnum, aspEnum, banorteEnum, banregioEnum, praxiEnum, alquimiaEnum, aztecaEnum, hsbcEnum } from 'src/app/app.enums';
 import { generic } from '../../app.interfaces';
 
 @Component({
@@ -101,6 +101,15 @@ export class EditorPanelComponent implements OnInit {
           break;
         case 'BANREGIO':
             this.banregioFormat(data);
+          break;
+        case 'ALQUIMIA':
+            this.alquimiaFormat(data);
+          break;
+        case 'AZTECA':
+            this.aztecaFormat(data);
+          break;
+        case 'HSBC':
+            this.hsbcFormat(data);
           break;
         default:
           break;
@@ -657,6 +666,135 @@ export class EditorPanelComponent implements OnInit {
     });
   }
 
+  alquimiaFormat(data: any[]) {
+    try {
+      this.data = data.map( (registro) => {
+        let reg:generic = this.initReg();
+
+        reg.fecha_reporte = this.dateReport;
+        reg.hora_reporte = this.timeReport;
+        
+        reg.hora_movimiento = '';
+        reg.dia = registro[alquimiaEnum.FECHA].substring(0,2);
+        reg.mes = registro[alquimiaEnum.FECHA].substring(3,5);
+        reg.anio = this.appService.formData.date.getFullYear();
+
+        reg.observacion = registro[alquimiaEnum.OBS];
+        reg.concepto = registro[alquimiaEnum.DESC].trim();
+
+        reg.entrada = registro[alquimiaEnum.ABONO] ? this.formatNumber(registro[alquimiaEnum.ABONO]) : 0.00;
+        if(registro[alquimiaEnum.CARGO]) {
+          let cargo = this.formatNumber(registro[alquimiaEnum.CARGO]);
+          reg.salida = cargo < 0 ? cargo * (-1) : cargo;
+        } else {
+          reg.salida = 0.00;
+        }
+        reg.saldo = this.formatNumber(registro[alquimiaEnum.SALDO]) || 0.00;
+        reg.tipo = this.defineType(reg.concepto, reg.entrada, reg.salida);
+      
+        return reg;
+      });
+
+      this.data = this.reverseArray(this.data);
+
+    } catch (error) {
+      console.error(error);
+      this.catchError('QUITAR INFORMACIÓN DE CABECERA');
+    }
+  }
+
+  aztecaFormat(data: any[]) {
+    try {
+      let numDay: string | number = 0;
+      let counterByDay = 0;
+
+      this.data = data.map( (registro) => {
+        let reg:generic = this.initReg();
+
+        reg.fecha_reporte = this.dateReport;
+        reg.hora_reporte = this.timeReport;
+
+        reg.hora_movimiento = '';
+        reg.dia = registro[aztecaEnum.FECHA].substring(8,10);
+        reg.mes = registro[aztecaEnum.FECHA].substring(5,7);
+        reg.anio = this.appService.formData.date.getFullYear();
+
+        if(numDay != reg.dia) {
+          numDay = reg.dia;
+          counterByDay = 1;
+        } else {
+          counterByDay += 1;
+        }
+        reg.id_interno = counterByDay;
+
+        reg.observacion = registro[aztecaEnum.OBS].trim();
+        reg.concepto = registro[aztecaEnum.DESC].trim();
+
+        if(registro[aztecaEnum.IMPORTE] > 0) {
+          reg.entrada = registro[aztecaEnum.IMPORTE];
+          reg.salida = 0.00;
+        } else {
+          let cargo = this.formatNumber(registro[aztecaEnum.IMPORTE]);
+          reg.salida = cargo < 0 ? cargo * (-1) : cargo;
+          reg.entrada = 0.00;
+        }
+        reg.saldo = registro[aztecaEnum.SALDO] || 0.00;
+        reg.tipo = this.defineType(reg.concepto, reg.entrada, reg.salida);
+      
+        return reg;
+      });
+    } catch (error) {
+      console.error(error);
+      this.catchError('ERROR');
+    }
+  }
+
+  hsbcFormat(data: any[]) {
+    try {
+      let numDay: string | number = 0;
+      let counterByDay = 0;
+
+      this.data = data.map( (registro) => {
+        let reg:generic = this.initReg();
+
+        reg.fecha_reporte = this.dateReport;
+        reg.hora_reporte = this.timeReport;
+        
+        reg.hora_movimiento = '';
+        reg.dia = registro[hsbcEnum.FECHA].substring(0,2);
+        reg.mes = registro[hsbcEnum.FECHA].substring(3,5);
+        reg.anio = this.appService.formData.date.getFullYear();
+        
+        if(numDay != reg.dia) {
+          numDay = reg.dia;
+          counterByDay = 1;
+        } else {
+          counterByDay += 1;
+        }
+        reg.id_interno = counterByDay;
+
+        reg.observacion = `${registro[hsbcEnum.OBS]} ${registro[hsbcEnum.OBS2]}`.trim();
+        reg.concepto = registro[hsbcEnum.DESC].trim();
+
+        reg.entrada = registro[hsbcEnum.ABONO] ? this.formatNumber(registro[hsbcEnum.ABONO]) : 0.00;
+        // if(registro[hsbcEnum.CARGO]) {
+        //   let cargo = this.formatNumber(registro[hsbcEnum.CARGO]);
+        //   reg.salida = cargo < 0 ? cargo * (-1) : cargo;
+        // } else {
+        // }
+        reg.salida = 0.00;
+        reg.saldo = registro[hsbcEnum.SALDO];
+
+        reg.tipo = this.defineType(reg.concepto, reg.entrada, reg.salida);
+      
+        return reg;
+      });
+
+    } catch (error) {
+      console.error(error);
+      this.catchError('ERROR');
+    }
+  }
 
   /** 
    * FUNCIONES DE UTILIDAD 
@@ -812,7 +950,10 @@ export class EditorPanelComponent implements OnInit {
   }
 
   private formatDate(date: string) {
-    date = date.replace('.','');
+    const idx = date.includes('.');
+    if(idx) {
+      date = date.replace('.','');
+    }
     let day = date.split('/')[0];
     let monthText = date.split('/')[1];
     let month = this.formatMonth(monthText);
@@ -823,51 +964,51 @@ export class EditorPanelComponent implements OnInit {
 
   private formatMonth(monthText: string): string {
     let month = '00';
-    if(monthText.includes('Ene'))
+    if(monthText.toLowerCase().includes('ene'))
     {
       month = '01';
     }
-    else if(monthText.includes('Feb'))
+    else if(monthText.toLowerCase().includes('feb'))
     {
       month = '02';
     }
-    else if(monthText.includes('Mar'))
+    else if(monthText.toLowerCase().includes('mar'))
     {
       month = '03';
     }
-    else if(monthText.includes('Abr'))
+    else if(monthText.toLowerCase().includes('abr'))
     {
       month = '04';
     }
-    else if(monthText.includes('May'))
+    else if(monthText.toLowerCase().includes('may'))
     {
       month = '05';
     }
-    else if(monthText.includes('Jun'))
+    else if(monthText.toLowerCase().includes('jun'))
     {
       month = '06';
     }
-    else if(monthText.includes('Jul'))
+    else if(monthText.toLowerCase().includes('jul'))
     {
       month = '07';
     }
-    else if(monthText.includes('Ago'))
+    else if(monthText.toLowerCase().includes('ago'))
     {
       month = '08';
     }
-    else if(monthText.includes('Sep'))
+    else if(monthText.toLowerCase().includes('sep'))
     {
       month = '09';
     }
-    else if(monthText.includes('Oct'))
+    else if(monthText.toLowerCase().includes('oct'))
     {
       month = '10';
     }
-    else if(monthText.includes('Nov'))
+    else if(monthText.toLowerCase().includes('nov'))
     {
       month = '11';
     }
-    else if(monthText.includes('Dic'))
+    else if(monthText.toLowerCase().includes('dic'))
     {
       month = '12';
     }

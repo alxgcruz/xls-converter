@@ -119,3 +119,29 @@ export enum banregioEnum {
   CARGO = 'Cargo',
   SALDO = 'Saldo'
 }
+
+export enum alquimiaEnum {
+  FECHA = 'Fecha',
+  DESC = 'Conceptos',
+  ABONO = 'Depósito',
+  CARGO = 'Retiro',
+  OBS = 'Clave de Rastreo',
+  SALDO = 'Saldos'
+}
+
+export enum aztecaEnum {
+  FECHA = 'FECHA DE APLICACION',
+  DESC = 'CONCEPTO',
+  IMPORTE = 'IMPORTE',
+  OBS = 'MOVIMIENTO',
+  SALDO = 'SALDO'
+}
+
+export enum hsbcEnum {
+  FECHA = 'Fecha del apunte',
+  DESC = 'Descripción',
+  ABONO = 'Importe de crédito',
+  OBS = 'Referencia bancaria',
+  OBS2 = 'Referencia de cliente',
+  SALDO = 'Saldo'
+}
