@@ -56,7 +56,7 @@ export const BUSINESS = [
     accounts : [
       {bank: 'AFIRME', account: '16291012454'},
       {bank: 'BBVA', account: '0110690287'},
-      {bank: 'STP', account: '646180251113600006'},
+      {bank: 'STP', account: '659803589000000001'},
       {bank: 'HSBC', account: '4069702934'},
     ]
   },
@@ -97,6 +97,7 @@ export const BUSINESS = [
       {bank: 'BANORTE', account: '0298221062'},
       {bank: 'SANTANDER', account: '65508624023'},
       {bank: 'STP', account: '659455001000001541'},
+      {bank: 'BANBAJIO', account: '440758690201'},
     ]
   },
   {
@@ -245,6 +246,8 @@ export const BUSINESS = [
     accounts : [
       {bank: 'AZTECA', account: '127180001520412624'},
       {bank: 'SANTANDER', account: '014680655080902497'},
+      {bank: 'BANBAJIO', account: '030680900039812322'},
+      {bank: 'AFIRME', account: '12141000231'},
     ]
   },
   {
@@ -262,13 +265,15 @@ export const BUSINESS = [
       {bank: 'BBVA DLS', account: '01175662638'},
       {bank: 'SANTANDER', account: '92001094274'},
       {bank: 'STP', account: '646180251114900006'},
+      {bank: 'BANBAJIO', account: '030680900029437898'},
     ]
   },
   {
     name: 'KOSIUKO',
     accounts : [
       {bank: 'ALQUIMIA', account: '659803000000277782'},
-      {bank: 'BANBAJIO', account: '412985220201'},
+      {bank: 'BANBAJIO', account: '412985220201'},      
+      {bank: 'STP', account: '659455000000006204'},
     ]
   },
   {
@@ -276,6 +281,7 @@ export const BUSINESS = [
     accounts : [
       {bank: 'AZTECA', account: '127180001519773617'},
       {bank: 'BBVA', account: '0118619298'},
+      {bank: 'STP', account: '659455035000000000'},
     ]
   },
   {
@@ -283,6 +289,12 @@ export const BUSINESS = [
     accounts : [
       {bank: 'BBVA', account: '0120463426'},
       {bank: 'BBVA', account: '0120463175'},
+    ]
+  },
+  {
+    name: 'HASSE',
+    accounts : [
+      {bank: 'STP', account: '659455000000005988'},
     ]
   }
 ]
