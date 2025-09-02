@@ -1,12 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
+import { afirmeEnum, alquimiaEnum, aspEnum, aztecaEnum, bajioEnum, banorteEnum, banregioEnum, bbvaEnum, genEnum, hsbcEnum, mifelEnum, multivaEnum, praxiEnum, santanderEnum, stpEnum } from 'src/app/app.enums';
 import { AppService } from 'src/app/services/app.service';
+import * as XLSX from 'xlsx';
+import { generic } from '../../app.interfaces';
 const EXCEL_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
 const EXCEL_EXTENSION = '.xlsx';
-import * as dayjs from 'dayjs';
-import { genEnum, multivaEnum, mifelEnum, stpEnum, bajioEnum, bbvaEnum, afirmeEnum, santanderEnum, aspEnum, banorteEnum, banregioEnum, praxiEnum, alquimiaEnum, aztecaEnum, hsbcEnum } from 'src/app/app.enums';
-import { generic } from '../../app.interfaces';
 
 @Component({
   selector: 'app-editor-panel',
@@ -777,12 +776,12 @@ export class EditorPanelComponent implements OnInit {
         reg.concepto = registro[hsbcEnum.DESC].trim();
 
         reg.entrada = registro[hsbcEnum.ABONO] ? this.formatNumber(registro[hsbcEnum.ABONO]) : 0.00;
-        // if(registro[hsbcEnum.CARGO]) {
-        //   let cargo = this.formatNumber(registro[hsbcEnum.CARGO]);
-        //   reg.salida = cargo < 0 ? cargo * (-1) : cargo;
-        // } else {
-        // }
-        reg.salida = 0.00;
+        if(registro[hsbcEnum.CARGO]) {
+          let cargo = this.formatNumber(registro[hsbcEnum.CARGO]);
+          reg.salida = cargo < 0 ? cargo * (-1) : cargo;
+        } else {
+          reg.salida = 0.00;
+        }
         reg.saldo = registro[hsbcEnum.SALDO];
 
         reg.tipo = this.defineType(reg.concepto, reg.entrada, reg.salida);

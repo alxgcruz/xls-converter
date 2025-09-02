@@ -141,6 +141,7 @@ export enum hsbcEnum {
   FECHA = 'Fecha del apunte',
   DESC = 'Descripción',
   ABONO = 'Importe de crédito',
+  CARGO = 'Importe del débito',
   OBS = 'Referencia bancaria',
   OBS2 = 'Referencia de cliente',
   SALDO = 'Saldo'
