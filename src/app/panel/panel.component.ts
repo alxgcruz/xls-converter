@@ -12,7 +12,7 @@ export class PanelComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
-    this.version += '1.1.9';
+    this.version += '1.1.10';
   }
 
 }
